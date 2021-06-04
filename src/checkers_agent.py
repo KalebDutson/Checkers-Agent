@@ -2,7 +2,7 @@ import random, pygame, sys,math
 from pygame.locals import *
 import time
 
-FPS = 5
+FPS = 10
 # if you change the window height or width, you will need to recalculate the value for cell size
 WINDOWWIDTH = 720
 WINDOWHEIGHT = 720
@@ -13,13 +13,12 @@ assert WINDOWHEIGHT % CELLSIZE == 0, "Window height must be a multiple of cell s
 # Calculate width and height for a 8x8 board
 CELLWIDTH = int(WINDOWWIDTH / CELLSIZE)
 CELLHEIGHT = int(WINDOWHEIGHT / CELLSIZE)
+
 BGCOLOR = (255, 255, 255)
 BLACK = (0, 0, 0)
-
-
-
 RED = pygame.Color('#9c5359')
 WHITE = pygame.Color('#d3bba2')
+
 
 def main():
     global FPSCLOCK, DISPLAYSURF, BASICFONT, BG_BOARD, RED_PIECE, RED_KING, WHITE_PIECE, WHITE_KING
@@ -91,11 +90,8 @@ def runGame():
                         board[xIndex][yIndex] = 'r'
 
             elif event.type == KEYDOWN:
-                # save screenshot of the board
-                if event.key == K_s:
-                    pygame.image.save(DISPLAYSURF, '../imgs/screenshots/screenshot-' + time.strftime('%d-%m-%Y-%H-%M-%S') + '.png')
                 # exit game
-                elif event.key == K_ESCAPE:
+                if event.key == K_ESCAPE:
                     terminate()
 
         DISPLAYSURF.blit(BG_BOARD, (0,0))
@@ -164,11 +160,13 @@ def showGameOverScreen():
             pygame.event.get() # clear event queue
             return
 
+
 def drawBoardState(board):
     for i in range(0, len(board)):
         for j in range(0, len(board[i])):
             if board[i][j] != '':
                 drawChecker(i, j, board[i][j])
+
 
 def drawChecker(x, y, piece):
     # piece is a king
@@ -182,25 +180,7 @@ def drawChecker(x, y, piece):
     yCenter = y * CELLSIZE + math.floor(CELLSIZE/2)
     spriteRect = sprite.get_rect()
     spriteRect.center = (xCenter, yCenter)
-    # radius = math.floor(CELLSIZE/2.5)
-    # pygame.draw.circle(DISPLAYSURF, sprite, (xCenter, yCenter), radius)
     DISPLAYSURF.blit(sprite, spriteRect)
-
-# Was used initially to draw to board before an image of the board was saved and loaded as the background
-def drawSquares():
-    squares = [['r', 'w', 'r', 'w', 'r', 'w', 'r', 'w'], ['w', 'r', 'w', 'r', 'w', 'r', 'w', 'r']] * 4
-    for i in range(0, len(squares)):
-        for j in range(0, len(squares[i])):
-            drawSquare(i, j, squares[i][j])
-
-
-def drawSquare(x, y, color):
-    color = WHITE if color == 'w' else RED
-    x = x * CELLSIZE
-    y = y * CELLSIZE
-
-    square = pygame.Rect(x, y, CELLSIZE, CELLSIZE)
-    pygame.draw.rect(DISPLAYSURF, color, square)
 
 
 if __name__ == '__main__':
