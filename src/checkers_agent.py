@@ -7,7 +7,7 @@ FPS = 5
 WINDOWWIDTH = 720
 WINDOWHEIGHT = 720
 CELLSIZE = 90
-RADIUS = math.floor(CELLSIZE/2.5)
+# RADIUS = math.floor(CELLSIZE/2.5)
 assert WINDOWWIDTH % CELLSIZE == 0, "Window width must be a multiple of cell size."
 assert WINDOWHEIGHT % CELLSIZE == 0, "Window height must be a multiple of cell size."
 # Calculate width and height for a 8x8 board
@@ -16,20 +16,25 @@ CELLHEIGHT = int(WINDOWHEIGHT / CELLSIZE)
 BGCOLOR = (255, 255, 255)
 BLACK = (0, 0, 0)
 
-BG_BOARD = pygame.image.load('../imgs/720x720_board.png')
+
+
 RED = pygame.Color('#9c5359')
 WHITE = pygame.Color('#d3bba2')
-SQUARES = [['r','w','r','w','r','w','r','w'], ['w','r','w','r','w','r','w','r']] * 4
-
 
 def main():
-    global FPSCLOCK, DISPLAYSURF, BASICFONT
+    global FPSCLOCK, DISPLAYSURF, BASICFONT, BG_BOARD, RED_PIECE, RED_KING, WHITE_PIECE, WHITE_KING
 
     pygame.init()
     FPSCLOCK = pygame.time.Clock()
     DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
     BASICFONT = pygame.font.Font('freesansbold.ttf', 18)
     pygame.display.set_caption('Checkers')
+
+    BG_BOARD = pygame.image.load('../imgs/720x720_board.png')
+    RED_PIECE = pygame.image.load('../imgs/red_piece.png').convert_alpha()
+    RED_KING = pygame.image.load('../imgs/red_king.png').convert_alpha()
+    WHITE_PIECE = pygame.image.load('../imgs/white_piece.png').convert_alpha()
+    WHITE_KING = pygame.image.load('../imgs/white_king.png').convert_alpha()
 
     # showStartScreen()
     while True:
@@ -38,22 +43,63 @@ def main():
 
 
 def runGame():
+    board = [
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', '']
+    ]
 
     while True:  # main game loop
         for event in pygame.event.get():  # event handling loop
             if event.type == QUIT:
                 terminate()
+
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                # right mouse click - add a WHITE checker
+                if event.button == 3:
+                    x, y = pygame.mouse.get_pos()
+                    xIndex = math.floor(x / CELLSIZE)
+                    yIndex = math.floor(y / CELLSIZE)
+                    # remove piece on second click
+                    if board[xIndex][yIndex] == 'w':
+                        board[xIndex][yIndex] = ''
+                    # add piece on empty square
+                    elif board[xIndex][yIndex] == '':
+                        board[xIndex][yIndex] = 'w'
+
+                # middle mouse click
+                if event.button == 2:
+                    print('Board:')
+                    for row in board:
+                        print(row)
+
+                # left mouse click - add a RED checker
+                elif event.button == 1:
+                    x,y = pygame.mouse.get_pos()
+                    xIndex = math.floor(x / CELLSIZE)
+                    yIndex = math.floor(y / CELLSIZE)
+                    # remove piece on second click
+                    if board[xIndex][yIndex] == 'r':
+                        board[xIndex][yIndex] = ''
+                    # add piece on empty square
+                    elif board[xIndex][yIndex] == '':
+                        board[xIndex][yIndex] = 'r'
+
             elif event.type == KEYDOWN:
                 # save screenshot of the board
                 if event.key == K_s:
                     pygame.image.save(DISPLAYSURF, '../imgs/screenshots/screenshot-' + time.strftime('%d-%m-%Y-%H-%M-%S') + '.png')
-
                 # exit game
-                if event.key == K_ESCAPE:
+                elif event.key == K_ESCAPE:
                     terminate()
 
         DISPLAYSURF.blit(BG_BOARD, (0,0))
-
+        drawBoardState(board)
         pygame.display.update()
         FPSCLOCK.tick(FPS)
 
@@ -118,17 +164,38 @@ def showGameOverScreen():
             pygame.event.get() # clear event queue
             return
 
+def drawBoardState(board):
+    for i in range(0, len(board)):
+        for j in range(0, len(board[i])):
+            if board[i][j] != '':
+                drawChecker(i, j, board[i][j])
+
+def drawChecker(x, y, piece):
+    # piece is a king
+    if piece.__contains__('k'):
+        # sprite = RED_KING if p
+        sprite = RED_KING if piece == 'rk' else WHITE_KING
+    else:
+        sprite = RED_PIECE if piece == 'r' else WHITE_PIECE
+
+    xCenter = x * CELLSIZE + math.floor(CELLSIZE/2)
+    yCenter = y * CELLSIZE + math.floor(CELLSIZE/2)
+    spriteRect = sprite.get_rect()
+    spriteRect.center = (xCenter, yCenter)
+    # radius = math.floor(CELLSIZE/2.5)
+    # pygame.draw.circle(DISPLAYSURF, sprite, (xCenter, yCenter), radius)
+    DISPLAYSURF.blit(sprite, spriteRect)
 
 # Was used initially to draw to board before an image of the board was saved and loaded as the background
-def drawSquares(array):
-    for i in range(0, len(array)):
-        for j in range(0, len(array[i])):
-            drawSquare(i, j, array[i][j])
+def drawSquares():
+    squares = [['r', 'w', 'r', 'w', 'r', 'w', 'r', 'w'], ['w', 'r', 'w', 'r', 'w', 'r', 'w', 'r']] * 4
+    for i in range(0, len(squares)):
+        for j in range(0, len(squares[i])):
+            drawSquare(i, j, squares[i][j])
 
 
 def drawSquare(x, y, color):
     color = WHITE if color == 'w' else RED
-
     x = x * CELLSIZE
     y = y * CELLSIZE
 
