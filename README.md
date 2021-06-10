@@ -3,5 +3,5 @@ Testing mode allows you to control who's turn it is and add / remove pieces to t
 #### Hotkeys
 * `T`: Activate testing mode
 * `ENTER`: Switch player turn
-* `Left Mouse`: Add a red piece to the board. Left click again to remove.
-* `Right Mouse`: Add a white piece to the board. Right click again to remove.
+* `Left Mouse`: Add a **RED** piece to the board. Left click again to remove.
+* `Right Mouse`: Add a **WHITE** piece to the board. Right click again to remove.
