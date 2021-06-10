@@ -24,7 +24,7 @@ RED = pygame.Color('#9c5359')
 WHITE = pygame.Color('#d3bba2')
 
 # when true, allows for adding an removing of checkers with mouse
-TEST_MODE = False
+TEST_MODE = True
 
 def main():
     global FPSCLOCK, DISPLAYSURF, BASICFONT, BG_BOARD, RED_PIECE, RED_KING, WHITE_PIECE, WHITE_KING
@@ -74,18 +74,27 @@ def runGame():
                     x, y = pygame.mouse.get_pos()
                     xIndex = math.floor(x / CELLSIZE)
                     yIndex = math.floor(y / CELLSIZE)
-                    # remove piece on second click
-                    if board[xIndex][yIndex] == 'w':
-                        board[xIndex][yIndex] = ''
-                    # add piece on empty square
-                    elif board[xIndex][yIndex] == '':
-                        board[xIndex][yIndex] = 'w'
+                    # don't compute clicks outside board
+                    if xIndex < 8 and yIndex < 8:
+                        # remove piece on second click
+                        if board[xIndex][yIndex] == 'w':
+                            board[xIndex][yIndex] = ''
+                        # add piece on empty square
+                        elif board[xIndex][yIndex] == '':
+                            board[xIndex][yIndex] = 'w'
 
                 # middle mouse click
                 if event.button == 2:
-                    print('Board:')
-                    for row in board:
-                        print(row)
+                    x, y = pygame.mouse.get_pos()
+                    xIndex = math.floor(x / CELLSIZE)
+                    yIndex = math.floor(y / CELLSIZE)
+                    # don't compute clicks outside board
+                    if xIndex < 8 and yIndex < 8:
+                        print('Square')
+                        print('(%s, %s)' % (xIndex, yIndex))
+                        print('Board:')
+                        for row in board:
+                            print(row)
 
                 # left mouse click - add a RED checker
                 elif event.button == 1:
