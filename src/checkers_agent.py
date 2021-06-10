@@ -4,9 +4,11 @@ import time
 
 FPS = 10
 # if you change the window height or width, you will need to recalculate the value for cell size
-WINDOWWIDTH = 720
+WINDOWWIDTH = 900
 WINDOWHEIGHT = 720
+# cell size makes the actual board 720x720. Allows for extra black space in window for messages
 CELLSIZE = 90
+
 # RADIUS = math.floor(CELLSIZE/2.5)
 assert WINDOWWIDTH % CELLSIZE == 0, "Window width must be a multiple of cell size."
 assert WINDOWHEIGHT % CELLSIZE == 0, "Window height must be a multiple of cell size."
@@ -14,11 +16,15 @@ assert WINDOWHEIGHT % CELLSIZE == 0, "Window height must be a multiple of cell s
 CELLWIDTH = int(WINDOWWIDTH / CELLSIZE)
 CELLHEIGHT = int(WINDOWHEIGHT / CELLSIZE)
 
-BGCOLOR = (255, 255, 255)
+REAL_WHITE = (255, 255, 255)
+BRIGHT_RED = (255,   0,   0)
+BGCOLOR = (50, 50, 50)
 BLACK = (0, 0, 0)
 RED = pygame.Color('#9c5359')
 WHITE = pygame.Color('#d3bba2')
 
+# when true, allows for adding an removing of checkers with mouse
+TEST_MODE = False
 
 def main():
     global FPSCLOCK, DISPLAYSURF, BASICFONT, BG_BOARD, RED_PIECE, RED_KING, WHITE_PIECE, WHITE_KING
@@ -42,6 +48,8 @@ def main():
 
 
 def runGame():
+    global TEST_MODE
+
     board = [
         ['', '', '', '', '', '', '', ''],
         ['', '', '', '', '', '', '', ''],
@@ -52,13 +60,15 @@ def runGame():
         ['', '', '', '', '', '', '', ''],
         ['', '', '', '', '', '', '', '']
     ]
+    # can be value 'w' or 'r'
+    turn = 'w'
 
     while True:  # main game loop
         for event in pygame.event.get():  # event handling loop
             if event.type == QUIT:
                 terminate()
 
-            elif event.type == pygame.MOUSEBUTTONDOWN:
+            elif event.type == pygame.MOUSEBUTTONDOWN and TEST_MODE:
                 # right mouse click - add a WHITE checker
                 if event.button == 3:
                     x, y = pygame.mouse.get_pos()
@@ -82,19 +92,34 @@ def runGame():
                     x,y = pygame.mouse.get_pos()
                     xIndex = math.floor(x / CELLSIZE)
                     yIndex = math.floor(y / CELLSIZE)
-                    # remove piece on second click
-                    if board[xIndex][yIndex] == 'r':
-                        board[xIndex][yIndex] = ''
-                    # add piece on empty square
-                    elif board[xIndex][yIndex] == '':
-                        board[xIndex][yIndex] = 'r'
+                    # don't compute clicks outside board
+                    if xIndex < 8 and yIndex < 8:
+                        # remove piece on second click
+                        if board[xIndex][yIndex] == 'r':
+                            board[xIndex][yIndex] = ''
+                        # add piece on empty square
+                        elif board[xIndex][yIndex] == '':
+                            board[xIndex][yIndex] = 'r'
 
             elif event.type == KEYDOWN:
+                # activate test mode
+                if event.key == K_t:
+                    TEST_MODE = not TEST_MODE
+                # switch turn
+                elif event.key == K_RETURN and TEST_MODE:
+                    turn = 'r' if turn == 'w' else 'w'
+
+                # end game
+                elif event.key == K_q:
+                    return
                 # exit game
-                if event.key == K_ESCAPE:
+                elif event.key == K_ESCAPE:
                     terminate()
 
+        DISPLAYSURF.fill(BGCOLOR)
         DISPLAYSURF.blit(BG_BOARD, (0,0))
+        drawMsgTitle()
+        drawStatus(turn)
         drawBoardState(board)
         pygame.display.update()
         FPSCLOCK.tick(FPS)
@@ -160,6 +185,34 @@ def showGameOverScreen():
             pygame.event.get() # clear event queue
             return
 
+
+def drawMsgTitle():
+    surf = BASICFONT.render('Status:', True, REAL_WHITE)
+    rect = surf.get_rect()
+    rect.bottomleft = (WINDOWWIDTH - 170, WINDOWHEIGHT - 695)
+    DISPLAYSURF.blit(surf, rect)
+
+def drawStatus(turn):
+    font = pygame.font.Font('freesansbold.ttf', 16)
+    s = 'no one\'s turn'
+    color = REAL_WHITE
+    if turn == 'r':
+        s = 'Red player\'s turn'
+        color = RED
+    elif turn == 'w':
+        s = 'White player\'s turn'
+        color = WHITE
+
+    surf = font.render(s, True, color)
+    rect = surf.get_rect()
+    rect.bottomleft = (WINDOWWIDTH - 170, WINDOWHEIGHT - 670)
+    DISPLAYSURF.blit(surf, rect)
+
+    if TEST_MODE:
+        surf = font.render('Testing Mode active', True, BRIGHT_RED)
+        rect = surf.get_rect()
+        rect.bottomleft = (WINDOWWIDTH - 170, WINDOWHEIGHT - 645)
+        DISPLAYSURF.blit(surf, rect)
 
 def drawBoardState(board):
     for i in range(0, len(board)):
