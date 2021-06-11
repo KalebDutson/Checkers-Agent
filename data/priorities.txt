@@ -1,0 +1,29 @@
+General priorities
+	• Capturing 2+ checkers
+	• Move resulting in a king
+	• Capturing a checker 
+	• Sacrificing a checker to capture a checker
+	• Moving checker to empty space
+	• Moving checker into position where it will be captured
+	• Moving a king into a position where it will be captured
+	
+Other Trends
+	Priority:
+		• Pieces closer to opposite end of board have more priority (except for kings)
+		• Moving a king has more priority than a normal piece
+	Utility:
+		• Moving piece towards enemy checker more utility than moving away
+		• Moving a piece farther from the middle has more utility
+		• Capturing a king has more utility than capturing a normal piece
+		
+		
+Possible weights to consider:
+	• LosingChecker: -1
+	• Losing king: -2
+	• XIndex = ?
+		∙ utility increases as piece moves farther from center
+	• YIndex = ?
+		∙ utility increases as piece moves closer to opposite side
+			∙ Doesn't apply to kings 
+	• CapturingChecker = 1
+	• CapturingKing = 3
