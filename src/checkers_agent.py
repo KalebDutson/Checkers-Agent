@@ -1,6 +1,7 @@
 import random, pygame, sys,math
 from pygame.locals import *
 import time
+from Board import *
 
 FPS = 10
 # if you change the window height or width, you will need to recalculate the value for cell size
@@ -50,16 +51,7 @@ def main():
 def runGame():
     global TEST_MODE
 
-    board = [
-        ['', '', '', '', '', '', '', ''],
-        ['', '', '', '', '', '', '', ''],
-        ['', '', '', '', '', '', '', ''],
-        ['', '', '', '', '', '', '', ''],
-        ['', '', '', '', '', '', '', ''],
-        ['', '', '', '', '', '', '', ''],
-        ['', '', '', '', '', '', '', ''],
-        ['', '', '', '', '', '', '', '']
-    ]
+    board = Board()
     # can be value 'w' or 'r'
     turn = 'w'
 
@@ -93,8 +85,7 @@ def runGame():
                         print('Square')
                         print('(%s, %s)' % (xIndex, yIndex))
                         print('Board:')
-                        for row in board:
-                            print(row)
+                        print(board)
 
                 # left mouse click - add a RED checker
                 elif event.button == 1:
@@ -226,17 +217,17 @@ def drawStatus(turn):
 def drawBoardState(board):
     for i in range(0, len(board)):
         for j in range(0, len(board[i])):
-            if board[i][j] != '':
+            if board[i][j]:
                 drawChecker(i, j, board[i][j])
 
 
 def drawChecker(x, y, piece):
     # piece is a king
-    if piece.__contains__('k'):
+    if piece.kinged:
         # sprite = RED_KING if p
-        sprite = RED_KING if piece == 'rk' else WHITE_KING
+        sprite = RED_KING if piece.red else WHITE_KING
     else:
-        sprite = RED_PIECE if piece == 'r' else WHITE_PIECE
+        sprite = RED_PIECE if piece.red else WHITE_PIECE
 
     xCenter = x * CELLSIZE + math.floor(CELLSIZE/2)
     yCenter = y * CELLSIZE + math.floor(CELLSIZE/2)
