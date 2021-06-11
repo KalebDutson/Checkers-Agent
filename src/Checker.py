@@ -31,11 +31,16 @@ class Checker:
         diags = self.getDiagonals(board)
 
         # Empty squares this piece could move to
-        moves = [Move(self.position, m, False, m.y == 0 if self.red else m.y == 8) for m in diags 
+        moves = [Move(self.position, m, False, not self.kinged and m.y == 0 if self.red else m.y == 8, False) for m in diags 
                 if not board.occupied(m) and (self.kinged or (m.y - self.position.y < 0) == self.red)]
 
-        jumps = [Move(self.position, m + (m - self.position), True, (m + (m - self.position)).y == 0 if self.red else (m + (m - self.position)).y == 7) for m in diags
-                if board.occupied(m) and board[m].red != self.red and not board.occupied(m + (m - self.position)) and (self.kinged or ((m + (m - self.position)).y - self.position.y < 0) == self.red)]
+        jumps = []
+        for neighbor in diags:            
+            if board.occupied(neighbor) and board[neighbor].red != self.red and not board.occupied(neighbor + (neighbor - self.position)) and (self.kinged or ((neighbor + (neighbor - self.position)).y - self.position.y < 0) == self.red):
+                print(board[neighbor].kinged)
+                dst = neighbor + (neighbor - self.position)
+                king = not self.kinged and (neighbor + (neighbor - self.position)).y == 0 if self.red else (neighbor + (neighbor - self.position)).y == 7
+                jumps.append(Move(self.position, dst, True, king, board[neighbor].kinged))
 
         moves += jumps
 

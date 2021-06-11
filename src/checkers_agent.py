@@ -29,11 +29,6 @@ WHITE = pygame.Color('#d3bba2')
 # when true, allows for adding an removing of checkers with mouse
 TEST_MODE = True
 
-# Some debug information reported by the piece the mouse is over
-PIECE_INFO = ""
-# The piece that gave pieceInfo, so it's not polled every frame
-INFO_PIECE = None
-
 def main():
     global FPSCLOCK, DISPLAYSURF, BASICFONT, BG_BOARD, RED_PIECE, RED_KING, WHITE_PIECE, WHITE_KING
 
@@ -56,9 +51,7 @@ def main():
 
 
 def runGame():
-    global TEST_MODE
-    global INFO_PIECE
-    global PIECE_INFO
+    global TEST_MODE    
 
     board = Board()
     # can be value 'w' or 'r'
@@ -77,12 +70,13 @@ def runGame():
                     yIndex = math.floor(y / CELLSIZE)
                     # don't compute clicks outside board
                     if xIndex < 8 and yIndex < 8:
-                        # remove piece on second click
-                        if board[xIndex][yIndex] == 'w':
-                            board[xIndex][yIndex] = None
+                        piece = board[xIndex, yIndex]
                         # add piece on empty square
-                        elif board[xIndex][yIndex] == None:
+                        if piece == None:
                             board[xIndex][yIndex] = Checker(xIndex, yIndex, False)
+                        # remove piece on second click                                                
+                        elif not piece.red:
+                            board[xIndex][yIndex] = None
 
                 # middle mouse click
                 elif event.button == 2:
@@ -103,12 +97,14 @@ def runGame():
                     yIndex = math.floor(y / CELLSIZE)
                     # don't compute clicks outside board
                     if xIndex < 8 and yIndex < 8:
-                        # remove piece on second click
-                        if board[xIndex][yIndex] == 'r':
-                            board[xIndex, yIndex] = None
+                        piece = board[xIndex, yIndex]
                         # add piece on empty square
-                        elif board[xIndex][yIndex] == None:
-                            board[xIndex, yIndex] = Checker(xIndex, yIndex, True)
+                        if piece == None:
+                            board[xIndex, yIndex] = Checker(xIndex, yIndex, True)                            
+                        # remove piece on second click                        
+                        elif piece.red:                                                
+                            board[xIndex, yIndex] = None
+                            
 
             elif event.type == KEYDOWN:
                 # activate test mode
@@ -131,11 +127,22 @@ def runGame():
                     # only check squares on board
                     if xIndex < 8 and yIndex < 8:
                         if board[xIndex][yIndex] is not None:
-                            checker = board.__getitem__((xIndex, yIndex))
-                            if checker.__str__().__contains__('k'):
+                            checker = board[xIndex, yIndex]
+                            if checker.kinged:
                                 checker.deKing()
                             else:
                                 checker.becomeKing()
+                elif event.key == K_p and TEST_MODE:
+                    x, y = pygame.mouse.get_pos()
+                    xIndex = math.floor(x / CELLSIZE)
+                    yIndex = math.floor(y / CELLSIZE)
+                    # only check squares on board
+                    if xIndex < 8 and yIndex < 8:
+                        if board[xIndex][yIndex] is not None:
+                            checker = board[xIndex, yIndex]
+                            moves = checker.calculateMoves(board)
+                            print("Moves:")
+                            print([str(m) for m in moves])
 
                 # Reset the board
                 elif event.key == K_r and TEST_MODE:
@@ -148,24 +155,6 @@ def runGame():
                 # exit game
                 elif event.key == K_ESCAPE:
                     terminate()
-
-            elif event.type == MOUSEMOTION:
-                x, y = pygame.mouse.get_pos()
-                xIndex = math.floor(x / CELLSIZE)
-                yIndex = math.floor(y / CELLSIZE)
-                if xIndex < 8 and yIndex < 8:
-                    piece = board[xIndex, yIndex]
-                    if INFO_PIECE != piece:
-                        INFO_PIECE = piece
-                        if piece != None:
-                            moves = piece.calculateMoves(board)                            
-
-                            if len(moves):
-                                PIECE_INFO =  "Potential score: %s" % max([m.score() for m in moves])
-                                print("Moves:")
-                                print([str(m) for m in moves])
-                            else:
-                                PIECE_INFO = "NO MOVES"
 
         DISPLAYSURF.fill(BGCOLOR)
         DISPLAYSURF.blit(BG_BOARD, (0,0))
@@ -263,11 +252,6 @@ def drawStatus(turn):
         surf = font.render('Testing Mode active', True, BRIGHT_RED)
         rect = surf.get_rect()
         rect.bottomleft = (WINDOWWIDTH - 170, WINDOWHEIGHT - 645)
-        DISPLAYSURF.blit(surf, rect)
-
-        surf = font.render(PIECE_INFO, True, GRAY)
-        rect = surf.get_rect()
-        rect.bottomleft = (WINDOWWIDTH - 170, WINDOWHEIGHT - 620)
         DISPLAYSURF.blit(surf, rect)
 
 def drawBoardState(board):
