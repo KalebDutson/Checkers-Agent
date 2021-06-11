@@ -27,10 +27,16 @@ class Board:
             else: # Assume it's an integer
                 return self.squares[indices[0]]
         elif len(indices) == 2:
-            print(indices)
             return self.squares[indices[0]][indices[1]]
         else:
-            raise "Invalid number of indices: expected 2 or 1."
+            raise Exception("Invalid number of indices: expected 2 or 1.")
+
+    # Set a square to a specific piece
+    # indices is the tuple (x,y)
+    # checker is a Checker object at x,y
+    def __setitem__(self, indices, checker):
+        assert isinstance(indices, tuple) and len(indices) == 2
+        self.squares[indices[0]][indices[1]] = checker
 
     def __len__(self):
         # This should always be 8 but magic numbers make
@@ -38,14 +44,12 @@ class Board:
         return len(self.squares)
 
     # Returns whether the square at the point is occupied
+    # point is the tuple (x,y)
     def occupied(self, point):
-        return self.occupied(point.x, point.y)
-
-    # Returns whether the square at x, y is occupied
-    def occupied(self, x,y):
-        return not not len(self[x,y])
+        return not not self[point[0]][point[1]]
 
     def reset(self):
+        self.squares = []
         for x in range(0, 8):
             self.squares.append([])
             for y in range(0, 8):
@@ -55,7 +59,22 @@ class Board:
                     else:
                         self.squares[x].append(None)    
                 else:
-                    self.squares[x].append(None)     
+                    self.squares[x].append(None)
+
+    # clear board of all checkers
+    def clear(self):
+        self.squares = [
+            [None, None, None, None, None, None, None, None],
+            [None, None, None, None, None, None, None, None],
+            [None, None, None, None, None, None, None, None],
+            [None, None, None, None, None, None, None, None],
+            [None, None, None, None, None, None, None, None],
+            [None, None, None, None, None, None, None, None],
+            [None, None, None, None, None, None, None, None],
+            [None, None, None, None, None, None, None, None],
+        ]
+
+
 
     def __str__(self):
         strBoard = []

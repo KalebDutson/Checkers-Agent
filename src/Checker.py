@@ -35,6 +35,9 @@ class Checker:
         moves = [m for m in diags if not board.occupied(m)]
 
         enemies = [e for e in diags if board[e]]
-                
+
+    def getColor(self):
+        return 'r' if self.red else 'w'
+
     def __str__(self):
         return "%s%s" % ('r' if self.red else 'w', 'k' if self.kinged else '')
