@@ -35,6 +35,22 @@ class Checker:
         moves = [m for m in diags if not board.occupied(m)]
 
         enemies = [e for e in diags if board[e]]
-                
+
+    def __eq__(self, value):
+        if isinstance(value, str):
+            return str(self) == value
+        elif isinstance(value, Checker):
+            return self.x == value.x and self.y == value.y and self.red == value.red and self.kinged == value.kinged
+        else:
+            return False
+
+    def __ne__(self, value):
+        if isinstance(value, str):
+            return str(self) != value
+        elif isinstance(value, Checker):
+            return self.x != value.x or self.y != value.y or self.red != value.red or self.kinged != value.kinged
+        else:
+            return True
+
     def __str__(self):
         return "%s%s" % ('r' if self.red else 'w', 'k' if self.kinged else '')

@@ -70,10 +70,10 @@ def runGame():
                     if xIndex < 8 and yIndex < 8:
                         # remove piece on second click
                         if board[xIndex][yIndex] == 'w':
-                            board[xIndex][yIndex] = ''
+                            board[xIndex][yIndex] = None
                         # add piece on empty square
-                        elif board[xIndex][yIndex] == '':
-                            board[xIndex][yIndex] = 'w'
+                        elif board[xIndex][yIndex] == None:
+                            board[xIndex][yIndex] = Checker(xIndex, yIndex, False)
 
                 # middle mouse click
                 if event.button == 2:
@@ -96,10 +96,10 @@ def runGame():
                     if xIndex < 8 and yIndex < 8:
                         # remove piece on second click
                         if board[xIndex][yIndex] == 'r':
-                            board[xIndex][yIndex] = ''
+                            board[xIndex, yIndex] = None
                         # add piece on empty square
-                        elif board[xIndex][yIndex] == '':
-                            board[xIndex][yIndex] = 'r'
+                        elif board[xIndex][yIndex] == None:
+                            board[xIndex, yIndex] = Checker(xIndex, yIndex, True)
 
             elif event.type == KEYDOWN:
                 # activate test mode
@@ -108,6 +108,9 @@ def runGame():
                 # switch turn
                 elif event.key == K_RETURN and TEST_MODE:
                     turn = 'r' if turn == 'w' else 'w'
+                # Reset the board
+                elif event.key == K_r and TEST_MODE:
+                    board.reset()
 
                 # end game
                 elif event.key == K_q:
