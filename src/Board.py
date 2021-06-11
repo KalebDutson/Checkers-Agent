@@ -59,7 +59,11 @@ class Board:
     # Returns whether the square at the point is occupied
     # point is the tuple (x,y)
     def occupied(self, point):
-        return not not self[point[0]][point[1]]
+        if point.x >= 0 and point.x < len(self.squares) and point.y >= 0 and point.y < len(self.squares[0]):
+            return not not self[point.x, point.y]
+        else:
+            # Everything off the board is occupied I guess
+            return True
 
     def reset(self):
         self.squares = []

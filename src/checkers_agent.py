@@ -22,6 +22,7 @@ REAL_WHITE = (255, 255, 255)
 BRIGHT_RED = (255,   0,   0)
 BGCOLOR = (50, 50, 50)
 BLACK = (0, 0, 0)
+GRAY = pygame.Color("#f9f9f9")
 RED = pygame.Color('#9c5359')
 WHITE = pygame.Color('#d3bba2')
 
@@ -50,7 +51,7 @@ def main():
 
 
 def runGame():
-    global TEST_MODE
+    global TEST_MODE    
 
     board = Board()
     # can be value 'w' or 'r'
@@ -69,12 +70,13 @@ def runGame():
                     yIndex = math.floor(y / CELLSIZE)
                     # don't compute clicks outside board
                     if xIndex < 8 and yIndex < 8:
-                        # remove piece on second click
-                        if board[xIndex][yIndex] == 'w':
-                            board[xIndex][yIndex] = None
+                        piece = board[xIndex, yIndex]
                         # add piece on empty square
-                        elif board[xIndex][yIndex] == None:
+                        if piece == None:
                             board[xIndex][yIndex] = Checker(xIndex, yIndex, False)
+                        # remove piece on second click                                                
+                        elif not piece.red:
+                            board[xIndex][yIndex] = None
 
                 # middle mouse click
                 elif event.button == 2:
@@ -95,12 +97,14 @@ def runGame():
                     yIndex = math.floor(y / CELLSIZE)
                     # don't compute clicks outside board
                     if xIndex < 8 and yIndex < 8:
-                        # remove piece on second click
-                        if board[xIndex][yIndex] == 'r':
-                            board[xIndex, yIndex] = None
+                        piece = board[xIndex, yIndex]
                         # add piece on empty square
-                        elif board[xIndex][yIndex] == None:
-                            board[xIndex, yIndex] = Checker(xIndex, yIndex, True)
+                        if piece == None:
+                            board[xIndex, yIndex] = Checker(xIndex, yIndex, True)                            
+                        # remove piece on second click                        
+                        elif piece.red:                                                
+                            board[xIndex, yIndex] = None
+                            
 
             elif event.type == KEYDOWN:
                 # activate test mode
@@ -123,11 +127,22 @@ def runGame():
                     # only check squares on board
                     if xIndex < 8 and yIndex < 8:
                         if board[xIndex][yIndex] is not None:
-                            checker = board.__getitem__((xIndex, yIndex))
-                            if checker.__str__().__contains__('k'):
+                            checker = board[xIndex, yIndex]
+                            if checker.kinged:
                                 checker.deKing()
                             else:
                                 checker.becomeKing()
+                elif event.key == K_p and TEST_MODE:
+                    x, y = pygame.mouse.get_pos()
+                    xIndex = math.floor(x / CELLSIZE)
+                    yIndex = math.floor(y / CELLSIZE)
+                    # only check squares on board
+                    if xIndex < 8 and yIndex < 8:
+                        if board[xIndex][yIndex] is not None:
+                            checker = board[xIndex, yIndex]
+                            moves = checker.calculateMoves(board)
+                            print("Moves:")
+                            print([str(m) for m in moves])
 
                 # Reset the board
                 elif event.key == K_r and TEST_MODE:
