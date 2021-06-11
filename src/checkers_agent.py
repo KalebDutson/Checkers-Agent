@@ -21,11 +21,17 @@ REAL_WHITE = (255, 255, 255)
 BRIGHT_RED = (255,   0,   0)
 BGCOLOR = (50, 50, 50)
 BLACK = (0, 0, 0)
+GRAY = pygame.Color("#f9f9f9")
 RED = pygame.Color('#9c5359')
 WHITE = pygame.Color('#d3bba2')
 
 # when true, allows for adding an removing of checkers with mouse
 TEST_MODE = True
+
+# Some debug information reported by the piece the mouse is over
+PIECE_INFO = ""
+# The piece that gave pieceInfo, so it's not polled every frame
+INFO_PIECE = None
 
 def main():
     global FPSCLOCK, DISPLAYSURF, BASICFONT, BG_BOARD, RED_PIECE, RED_KING, WHITE_PIECE, WHITE_KING
@@ -50,6 +56,8 @@ def main():
 
 def runGame():
     global TEST_MODE
+    global INFO_PIECE
+    global PIECE_INFO
 
     board = Board()
     # can be value 'w' or 'r'
@@ -118,6 +126,24 @@ def runGame():
                 # exit game
                 elif event.key == K_ESCAPE:
                     terminate()
+
+            elif event.type == MOUSEMOTION:
+                x, y = pygame.mouse.get_pos()
+                xIndex = math.floor(x / CELLSIZE)
+                yIndex = math.floor(y / CELLSIZE)
+                if xIndex < 8 and yIndex < 8:
+                    piece = board[xIndex, yIndex]
+                    if INFO_PIECE != piece:
+                        INFO_PIECE = piece
+                        if piece != None:
+                            moves = piece.calculateMoves(board)                            
+
+                            if len(moves):
+                                PIECE_INFO =  "Potential score: %s" % max([m.score() for m in moves])
+                                print("Moves:")
+                                print([str(m) for m in moves])
+                            else:
+                                PIECE_INFO = "NO MOVES"
 
         DISPLAYSURF.fill(BGCOLOR)
         DISPLAYSURF.blit(BG_BOARD, (0,0))
@@ -215,6 +241,11 @@ def drawStatus(turn):
         surf = font.render('Testing Mode active', True, BRIGHT_RED)
         rect = surf.get_rect()
         rect.bottomleft = (WINDOWWIDTH - 170, WINDOWHEIGHT - 645)
+        DISPLAYSURF.blit(surf, rect)
+
+        surf = font.render(PIECE_INFO, True, GRAY)
+        rect = surf.get_rect()
+        rect.bottomleft = (WINDOWWIDTH - 170, WINDOWHEIGHT - 620)
         DISPLAYSURF.blit(surf, rect)
 
 def drawBoardState(board):

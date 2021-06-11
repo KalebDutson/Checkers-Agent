@@ -6,9 +6,6 @@ class Point:
         self.x = x
         self.y = y
 
-    def __init__(self):
-        self.__init__(0,0)
-
     def distance(self, other):
         return sqrt(pow(self.x - other.x, 2) + pow(self.y - other.y, 2))
 
@@ -17,3 +14,25 @@ class Point:
 
     def __str__(self):
         return "(%s, %s)" % (self.x, self.y)
+
+    def __eq__(self, other):
+        if other == None:
+            return False
+        elif isinstance(other, Point):
+            return self.x == other.x and self.y == other.y
+        else:
+            return False
+
+    def __ne__(self, other):
+        if other == None:
+            return True
+        elif isinstance(other, Point):
+            return self.x != other.x or self.y != other.y
+        else:
+            return True
+
+    def __add__(self, other):
+        return Point(self.x + other.x, self.y + other.y)
+    
+    def __sub__(self, other):
+        return Point(self.x - other.x, self.y - other.y)

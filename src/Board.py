@@ -27,7 +27,6 @@ class Board:
             else: # Assume it's an integer
                 return self.squares[indices[0]]
         elif len(indices) == 2:
-            print(indices)
             return self.squares[indices[0]][indices[1]]
         else:
             raise "Invalid number of indices: expected 2 or 1."
@@ -59,11 +58,11 @@ class Board:
 
     # Returns whether the square at the point is occupied
     def occupied(self, point):
-        return self.occupied(point.x, point.y)
-
-    # Returns whether the square at x, y is occupied
-    def occupied(self, x,y):
-        return not not len(self[x,y])
+        if point.x >= 0 and point.x < len(self.squares) and point.y >= 0 and point.y < len(self.squares[0]):
+            return not not self[point.x, point.y]
+        else:
+            # Everything off the board is occupied I guess
+            return True
 
     def reset(self):
         self.squares = []
