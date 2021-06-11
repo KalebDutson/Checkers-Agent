@@ -115,6 +115,19 @@ def runGame():
                 # clear board of all pieces
                 elif event.key == K_c and TEST_MODE:
                     board.clear()
+                # king / un-king the piece at the mouse location
+                elif event.key == K_k and TEST_MODE:
+                    x, y = pygame.mouse.get_pos()
+                    xIndex = math.floor(x / CELLSIZE)
+                    yIndex = math.floor(y / CELLSIZE)
+                    # only check squares on board
+                    if xIndex < 8 and yIndex < 8:
+                        if board[xIndex][yIndex] is not None:
+                            checker = board.__getitem__((xIndex, yIndex))
+                            if checker.__str__().__contains__('k'):
+                                checker.deKing()
+                            else:
+                                checker.becomeKing()
 
                 # Reset the board
                 elif event.key == K_r and TEST_MODE:

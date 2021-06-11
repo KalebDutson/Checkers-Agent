@@ -36,6 +36,12 @@ class Checker:
 
         enemies = [e for e in diags if board[e]]
 
+    def becomeKing(self):
+        self.kinged = True
+
+    def deKing(self):
+        self.kinged = False
+
     def __eq__(self, value):
         if isinstance(value, str):
             return str(self) == value
