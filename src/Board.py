@@ -29,7 +29,7 @@ class Board:
         elif len(indices) == 2:
             return self.squares[indices[0]][indices[1]]
         else:
-            raise "Invalid number of indices: expected 2 or 1."
+            raise Exception("Invalid number of indices: expected 2 or 1.")
 
     # Indexer for setting a square of the board
     # If given a single integer index, sets a column at x.
@@ -49,7 +49,7 @@ class Board:
         elif len(indices) == 2:
             self.squares[indices[0]][indices[1]] = value
         else:
-            raise "Invalid number of indices: expected 2 or 1."
+            raise Exception("Invalid number of indices: expected 2 or 1.")
 
     def __len__(self):
         # This should always be 8 but magic numbers make
@@ -57,6 +57,7 @@ class Board:
         return len(self.squares)
 
     # Returns whether the square at the point is occupied
+    # point is the tuple (x,y)
     def occupied(self, point):
         if point.x >= 0 and point.x < len(self.squares) and point.y >= 0 and point.y < len(self.squares[0]):
             return not not self[point.x, point.y]
@@ -75,7 +76,20 @@ class Board:
                     else:
                         self.squares[x].append(None)    
                 else:
-                    self.squares[x].append(None)     
+                    self.squares[x].append(None)
+
+    # clear board of all checkers
+    def clear(self):
+        self.squares = [
+            [None, None, None, None, None, None, None, None],
+            [None, None, None, None, None, None, None, None],
+            [None, None, None, None, None, None, None, None],
+            [None, None, None, None, None, None, None, None],
+            [None, None, None, None, None, None, None, None],
+            [None, None, None, None, None, None, None, None],
+            [None, None, None, None, None, None, None, None],
+            [None, None, None, None, None, None, None, None],
+        ]
 
     def __str__(self):
         r = ""

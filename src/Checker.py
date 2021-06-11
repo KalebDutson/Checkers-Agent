@@ -43,6 +43,12 @@ class Checker:
 
         return moves
 
+    def becomeKing(self):
+        self.kinged = True
+
+    def deKing(self):
+        self.kinged = False
+
     def __eq__(self, value):
         if isinstance(value, str):
             return str(self) == value

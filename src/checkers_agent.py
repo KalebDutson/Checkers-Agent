@@ -2,6 +2,7 @@ import random, pygame, sys,math
 from pygame.locals import *
 import time
 from Board import *
+from Checker import Checker
 
 FPS = 10
 # if you change the window height or width, you will need to recalculate the value for cell size
@@ -61,7 +62,7 @@ def runGame():
 
     board = Board()
     # can be value 'w' or 'r'
-    turn = 'w'
+    turn = 'r'
 
     while True:  # main game loop
         for event in pygame.event.get():  # event handling loop
@@ -84,7 +85,7 @@ def runGame():
                             board[xIndex][yIndex] = Checker(xIndex, yIndex, False)
 
                 # middle mouse click
-                if event.button == 2:
+                elif event.button == 2:
                     x, y = pygame.mouse.get_pos()
                     xIndex = math.floor(x / CELLSIZE)
                     yIndex = math.floor(y / CELLSIZE)
@@ -116,9 +117,30 @@ def runGame():
                 # switch turn
                 elif event.key == K_RETURN and TEST_MODE:
                     turn = 'r' if turn == 'w' else 'w'
+                # reset board
+                elif event.key == K_r and TEST_MODE:
+                    board.reset()
+                # clear board of all pieces
+                elif event.key == K_c and TEST_MODE:
+                    board.clear()
+                # king / un-king the piece at the mouse location
+                elif event.key == K_k and TEST_MODE:
+                    x, y = pygame.mouse.get_pos()
+                    xIndex = math.floor(x / CELLSIZE)
+                    yIndex = math.floor(y / CELLSIZE)
+                    # only check squares on board
+                    if xIndex < 8 and yIndex < 8:
+                        if board[xIndex][yIndex] is not None:
+                            checker = board.__getitem__((xIndex, yIndex))
+                            if checker.__str__().__contains__('k'):
+                                checker.deKing()
+                            else:
+                                checker.becomeKing()
+
                 # Reset the board
                 elif event.key == K_r and TEST_MODE:
                     board.reset()
+
 
                 # end game
                 elif event.key == K_q:
