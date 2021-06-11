@@ -69,15 +69,12 @@ def runGame():
                     yIndex = math.floor(y / CELLSIZE)
                     # don't compute clicks outside board
                     if xIndex < 8 and yIndex < 8:
-                        # create white checker
-                        checker = Checker(xIndex, yIndex, False)
-                        # add piece on empty square
-                        if not board.occupied((xIndex, yIndex)):
-                            board.__setitem__((xIndex, yIndex), checker)
                         # remove piece on second click
-                        else:
-                            if board.__getitem__((xIndex, yIndex)).getColor() == 'w':
-                                board.__setitem__((xIndex, yIndex), None)
+                        if board[xIndex][yIndex] == 'w':
+                            board[xIndex][yIndex] = None
+                        # add piece on empty square
+                        elif board[xIndex][yIndex] == None:
+                            board[xIndex][yIndex] = Checker(xIndex, yIndex, False)
 
                 # middle mouse click
                 elif event.button == 2:
@@ -98,15 +95,12 @@ def runGame():
                     yIndex = math.floor(y / CELLSIZE)
                     # don't compute clicks outside board
                     if xIndex < 8 and yIndex < 8:
-                        # create red checker
-                        checker = Checker(xIndex, yIndex, True)
-                        # add piece on empty square
-                        if not board.occupied((xIndex, yIndex)):
-                            board.__setitem__((xIndex, yIndex), checker)
                         # remove piece on second click
-                        else:
-                            if board.__getitem__((xIndex, yIndex)).getColor() == 'r':
-                                board.__setitem__((xIndex, yIndex), None)
+                        if board[xIndex][yIndex] == 'r':
+                            board[xIndex, yIndex] = None
+                        # add piece on empty square
+                        elif board[xIndex][yIndex] == None:
+                            board[xIndex, yIndex] = Checker(xIndex, yIndex, True)
 
             elif event.type == KEYDOWN:
                 # activate test mode
@@ -119,8 +113,13 @@ def runGame():
                 elif event.key == K_r and TEST_MODE:
                     board.reset()
                 # clear board of all pieces
-                if event.key == K_c and TEST_MODE:
+                elif event.key == K_c and TEST_MODE:
                     board.clear()
+
+                # Reset the board
+                elif event.key == K_r and TEST_MODE:
+                    board.reset()
+
 
                 # end game
                 elif event.key == K_q:
