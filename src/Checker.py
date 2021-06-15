@@ -49,7 +49,7 @@ class Checker:
     # diags: array of diagonals the piece can possible move to
     # returns:
     #   jumps: array of moves that involve a jump
-    #   multiJumps: array of moves that involve multiple jumps up to a triple jump
+    #   multiJumps: 2D array of possible multi-jumps. ex: [[moveA.1, moveA.2, moveA.3],[moveB.1, moveB.2] ... etc]
     def calculateJumps(self, board, diags):
         allMultiJumps = []
         jumps = []
