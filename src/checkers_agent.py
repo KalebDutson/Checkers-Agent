@@ -77,19 +77,6 @@ def runGame():
                         # remove piece on second click                                                
                         elif not piece.red:
                             board[xIndex][yIndex] = None
-
-                # middle mouse click
-                elif event.button == 2:
-                    x, y = pygame.mouse.get_pos()
-                    xIndex = math.floor(x / CELLSIZE)
-                    yIndex = math.floor(y / CELLSIZE)
-                    # don't compute clicks outside board
-                    if xIndex < 8 and yIndex < 8:
-                        print('Square')
-                        print('(%s, %s)' % (xIndex, yIndex))
-                        print('Board:')
-                        print(board)
-
                 # left mouse click - add a RED checker
                 elif event.button == 1:
                     x,y = pygame.mouse.get_pos()
@@ -105,7 +92,6 @@ def runGame():
                         elif piece.red:                                                
                             board[xIndex, yIndex] = None
                             
-
             elif event.type == KEYDOWN:
                 # activate test mode
                 if event.key == K_t:
@@ -143,6 +129,9 @@ def runGame():
                             moves = checker.calculateMoves(board)
                             print("Moves:")
                             print([str(m) for m in moves])
+                elif event.key ==K_b and TEST_MODE:
+                    print('Board:')
+                    print(board)
 
                 # Reset the board
                 elif event.key == K_r and TEST_MODE:
@@ -253,6 +242,23 @@ def drawStatus(turn):
         rect = surf.get_rect()
         rect.bottomleft = (WINDOWWIDTH - 170, WINDOWHEIGHT - 645)
         DISPLAYSURF.blit(surf, rect)
+
+        surf = font.render('Square at Mouse', True, REAL_WHITE)
+        rect = surf.get_rect()
+        rect.bottomleft = (WINDOWWIDTH - 170, WINDOWHEIGHT - 595)
+        DISPLAYSURF.blit(surf, rect)
+
+        # show square index at mouse position
+        x, y = pygame.mouse.get_pos()
+        xIndex = math.floor(x / CELLSIZE)
+        yIndex = math.floor(y / CELLSIZE)
+        letters = ['A','B','C','D','E','F','G','H']
+        # don't compute clicks outside board
+        if xIndex < 8 and yIndex < 8:
+            surf = font.render('%s%s | Index: (%s, %s)' % (letters[xIndex], yIndex, xIndex, yIndex), True, REAL_WHITE)
+            rect = surf.get_rect()
+            rect.bottomleft = (WINDOWWIDTH - 170, WINDOWHEIGHT - 570)
+            DISPLAYSURF.blit(surf, rect)
 
 def drawBoardState(board):
     for i in range(0, len(board)):
