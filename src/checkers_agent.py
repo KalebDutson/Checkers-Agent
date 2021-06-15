@@ -91,7 +91,7 @@ def runGame():
                         # remove piece on second click                        
                         elif piece.red:                                                
                             board[xIndex, yIndex] = None
-                            
+
             elif event.type == KEYDOWN:
                 # activate test mode
                 if event.key == K_t:
@@ -252,7 +252,7 @@ def drawStatus(turn):
         x, y = pygame.mouse.get_pos()
         xIndex = math.floor(x / CELLSIZE)
         yIndex = math.floor(y / CELLSIZE)
-        letters = ['A','B','C','D','E','F','G','H']
+        letters = "ABCDEFGH"
         # don't compute clicks outside board
         if xIndex < 8 and yIndex < 8:
             surf = font.render('%s%s | Index: (%s, %s)' % (letters[xIndex], yIndex, xIndex, yIndex), True, REAL_WHITE)

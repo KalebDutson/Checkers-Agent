@@ -35,18 +35,47 @@ class Checker:
                 if not board.occupied(m) and (self.kinged or (m.y - self.position.y < 0) == self.red)]
 
         jumps = []
-        for neighbor in diags:            
-            if board.occupied(neighbor) and board[neighbor].red != self.red and not board.occupied(neighbor + (neighbor - self.position)) and (self.kinged or ((neighbor + (neighbor - self.position)).y - self.position.y < 0) == self.red):
-                print(board[neighbor].kinged)
-                dst = neighbor + (neighbor - self.position)
-                king = not self.kinged and (neighbor + (neighbor - self.position)).y == 0 if self.red else (neighbor + (neighbor - self.position)).y == 7
-                jumps.append(Move(self.position, dst, True, king, board[neighbor].kinged))
+        for neighbor in diags:
+            position = self.position
+            # maximum amount of consecutive jumps that can be made is 3
+            maxJumps = 3
+            for i in range(0, maxJumps):
+                position, jump = self.calculateJumps(board, neighbor, position, self.kinged)
+                if position is None and jump is None:
+                    break
+                if position == self.position:
+                    break
+                print('Position:', position)
+                print('self.position:', self.position)
+                print(position == self.position)
+                jumps.append(jump)
+
+            # if board.occupied(neighbor) and board[neighbor].red != self.red and not board.occupied(neighbor + (neighbor - self.position)) and (self.kinged or ((neighbor + (neighbor - self.position)).y - self.position.y < 0) == self.red):
+            #     # print(board[neighbor].kinged)
+            #     dst = neighbor + (neighbor - self.position)
+            #     king = not self.kinged and (neighbor + (neighbor - self.position)).y == 0 if self.red else (neighbor + (neighbor - self.position)).y == 7
+            #     jumps.append(Move(self.position, dst, True, king, board[neighbor].kinged))
+            #
+            #     # TODO: testing multiple jumps
+            #     # maximum amount of consecutive jumps that can be made is 3 (subtract 1 since a jump has already been found)
+            #     maxJumps = 2
+
+
 
         moves += jumps
 
         moves.sort(reverse=True)
 
         return moves
+
+    def calculateJumps(self, board, neighbor, position, kinged):
+        if board.occupied(neighbor) and board[neighbor].red != self.red and not board.occupied(neighbor + (neighbor - position)) and (kinged or ((neighbor + (neighbor - position)).y - position.y < 0) == self.red):
+            dst = neighbor + (neighbor - self.position)
+            king = not kinged and (neighbor + (neighbor - position)).y == 0 if self.red else (neighbor + (neighbor - position)).y == 7
+            jump = Move(position, dst, True, king, board[neighbor].kinged)
+            return dst, jump
+
+        return None, None
 
     def becomeKing(self):
         self.kinged = True
