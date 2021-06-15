@@ -34,18 +34,7 @@ class Checker:
         moves = [Move(self.position, m, False, not self.kinged and m.y == 0 if self.red else m.y == 8, False) for m in diags 
                 if not board.occupied(m) and (self.kinged or (m.y - self.position.y < 0) == self.red)]
 
-        jumps, newPositions = self.calculateJumps(board, diags)
-        # calculate possible squares in a straight line that can be multi-jumped to
-        for p in newPositions:
-            diff = (self.position - p)
-            print('point:', self.position)
-            print('diff:', diff)
-            # check this new point, if it is empty, a multi-jump is possible
-            multiJumpDest = p - diff
-            if not board.occupied(multiJumpDest):
-                print('Multi jump found')
-                if multiJumpDest not in newPositions:
-                    newPositions.append(multiJumpDest)
+        jumps = self.calculateJumps(board, diags)
 
         moves += jumps
 
@@ -57,7 +46,6 @@ class Checker:
     # diags: array of diagonals the piece can possible move to
     # returns:
     #   jumps: array of moves that involve a jump
-    #   newPositions: array of indexes that the checker can jump to
     def calculateJumps(self, board, diags):
         jumps = []
         newPositions = []
@@ -67,10 +55,29 @@ class Checker:
                 king = not self.kinged and (neighbor + (neighbor - self.position)).y == 0 if self.red else (neighbor + (neighbor - self.position)).y == 7
                 if dst not in newPositions:
                     newPositions.append(dst)
-                jump = Move(self.position, dst, True, king, board[neighbor].kinged)
-                jumps.append(jump)
+                jumps.append(Move(self.position, dst, True, king, board[neighbor].kinged))
 
-        return jumps, newPositions
+        # calculate possible squares in a straight line that can be multi-jumped to
+        for p in newPositions:
+            diff = (self.position - p)
+            enemyDiff = diff.divide(2)
+
+            doubleDst = p - diff
+            enemyDst = p - enemyDiff
+            print('enemyDst:', enemyDst)
+            print('multiJumpDest:', doubleDst)
+            # if there is an enemy checker between p and doubleDst, checker can double jump
+            if not board.occupied(doubleDst) and 8 > doubleDst.x > 0 and 8 > doubleDst.y > 0 and board.occupied(enemyDst):
+                if board[enemyDst].red != self.red:
+                    print('Double jump found. Can jump from %s to %s' % (p, doubleDst))
+                    # check this new point, if it is empty, a triple-jump is possible
+                    tripleDst = doubleDst - diff
+                    enemyDst = doubleDst - enemyDiff
+                if not board.occupied(doubleDst) and 8 > doubleDst.x > 0 and 8 > doubleDst.y > 0 and board.occupied(enemyDst):
+                    if board[enemyDst].red != self.red:
+                        print('Triple jump found. Can jump from %s to %s' % (doubleDst, tripleDst))
+
+        return jumps
 
     def becomeKing(self):
         self.kinged = True

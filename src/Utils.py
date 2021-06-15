@@ -36,3 +36,7 @@ class Point:
     
     def __sub__(self, other):
         return Point(self.x - other.x, self.y - other.y)
+
+    # divide all points by divisor
+    def divide(self, divisor):
+        return Point(self.x // divisor, self.y // divisor)
