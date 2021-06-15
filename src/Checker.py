@@ -34,33 +34,18 @@ class Checker:
         moves = [Move(self.position, m, False, not self.kinged and m.y == 0 if self.red else m.y == 8, False) for m in diags 
                 if not board.occupied(m) and (self.kinged or (m.y - self.position.y < 0) == self.red)]
 
-        jumps = []
-        for neighbor in diags:
-            position = self.position
-            # maximum amount of consecutive jumps that can be made is 3
-            maxJumps = 3
-            for i in range(0, maxJumps):
-                position, jump = self.calculateJumps(board, neighbor, position, self.kinged)
-                if position is None and jump is None:
-                    break
-                if position == self.position:
-                    break
-                print('Position:', position)
-                print('self.position:', self.position)
-                print(position == self.position)
-                jumps.append(jump)
-
-            # if board.occupied(neighbor) and board[neighbor].red != self.red and not board.occupied(neighbor + (neighbor - self.position)) and (self.kinged or ((neighbor + (neighbor - self.position)).y - self.position.y < 0) == self.red):
-            #     # print(board[neighbor].kinged)
-            #     dst = neighbor + (neighbor - self.position)
-            #     king = not self.kinged and (neighbor + (neighbor - self.position)).y == 0 if self.red else (neighbor + (neighbor - self.position)).y == 7
-            #     jumps.append(Move(self.position, dst, True, king, board[neighbor].kinged))
-            #
-            #     # TODO: testing multiple jumps
-            #     # maximum amount of consecutive jumps that can be made is 3 (subtract 1 since a jump has already been found)
-            #     maxJumps = 2
-
-
+        jumps, newPositions = self.calculateJumps(board, diags)
+        # calculate possible squares in a straight line that can be multi-jumped to
+        for p in newPositions:
+            diff = (self.position - p)
+            print('point:', self.position)
+            print('diff:', diff)
+            # check this new point, if it is empty, a multi-jump is possible
+            multiJumpDest = p - diff
+            if not board.occupied(multiJumpDest):
+                print('Multi jump found')
+                if multiJumpDest not in newPositions:
+                    newPositions.append(multiJumpDest)
 
         moves += jumps
 
@@ -68,14 +53,24 @@ class Checker:
 
         return moves
 
-    def calculateJumps(self, board, neighbor, position, kinged):
-        if board.occupied(neighbor) and board[neighbor].red != self.red and not board.occupied(neighbor + (neighbor - position)) and (kinged or ((neighbor + (neighbor - position)).y - position.y < 0) == self.red):
-            dst = neighbor + (neighbor - self.position)
-            king = not kinged and (neighbor + (neighbor - position)).y == 0 if self.red else (neighbor + (neighbor - position)).y == 7
-            jump = Move(position, dst, True, king, board[neighbor].kinged)
-            return dst, jump
+    # board: current board state
+    # diags: array of diagonals the piece can possible move to
+    # returns:
+    #   jumps: array of moves that involve a jump
+    #   newPositions: array of indexes that the checker can jump to
+    def calculateJumps(self, board, diags):
+        jumps = []
+        newPositions = []
+        for neighbor in diags:
+            if board.occupied(neighbor) and board[neighbor].red != self.red and not board.occupied(neighbor + (neighbor - self.position)) and (self.kinged or ((neighbor + (neighbor - self.position)).y - self.position.y < 0) == self.red):
+                dst = neighbor + (neighbor - self.position)
+                king = not self.kinged and (neighbor + (neighbor - self.position)).y == 0 if self.red else (neighbor + (neighbor - self.position)).y == 7
+                if dst not in newPositions:
+                    newPositions.append(dst)
+                jump = Move(self.position, dst, True, king, board[neighbor].kinged)
+                jumps.append(jump)
 
-        return None, None
+        return jumps, newPositions
 
     def becomeKing(self):
         self.kinged = True
