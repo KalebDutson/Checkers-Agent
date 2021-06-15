@@ -126,9 +126,15 @@ def runGame():
                     if xIndex < 8 and yIndex < 8:
                         if board[xIndex][yIndex] is not None:
                             checker = board[xIndex, yIndex]
-                            moves = checker.calculateMoves(board)
+                            moves, multiJumps = checker.calculateMoves(board)
                             print("Moves:")
                             print([str(m) for m in moves])
+
+                            if multiJumps:
+                                print('Multi Jumps:')
+                                for i in range(0, len(multiJumps)):
+                                    print([str(m) for m in multiJumps[i]])
+
                 elif event.key ==K_b and TEST_MODE:
                     print('Board:')
                     print(board)
