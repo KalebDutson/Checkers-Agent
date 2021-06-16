@@ -29,6 +29,7 @@ WHITE = pygame.Color('#d3bba2')
 # when true, allows for adding an removing of checkers with mouse
 TEST_MODE = True
 
+
 def main():
     global FPSCLOCK, DISPLAYSURF, BASICFONT, BG_BOARD, RED_PIECE, RED_KING, WHITE_PIECE, WHITE_KING
 
@@ -51,9 +52,10 @@ def main():
 
 
 def runGame():
-    global TEST_MODE    
+    global TEST_MODE
 
     board = Board()
+
     # can be value 'w' or 'r'
     turn = 'r'
 
@@ -62,88 +64,97 @@ def runGame():
             if event.type == QUIT:
                 terminate()
 
-            elif event.type == pygame.MOUSEBUTTONDOWN and TEST_MODE:
-                # right mouse click - add a WHITE checker
-                if event.button == 3:
-                    x, y = pygame.mouse.get_pos()
-                    xIndex = math.floor(x / CELLSIZE)
-                    yIndex = math.floor(y / CELLSIZE)
-                    # don't compute clicks outside board
-                    if xIndex < 8 and yIndex < 8:
-                        piece = board[xIndex, yIndex]
-                        # add piece on empty square
-                        if piece == None:
-                            board[xIndex][yIndex] = Checker(xIndex, yIndex, False)
-                        # remove piece on second click                                                
-                        elif not piece.red:
-                            board[xIndex][yIndex] = None
-                # left mouse click - add a RED checker
-                elif event.button == 1:
-                    x,y = pygame.mouse.get_pos()
-                    xIndex = math.floor(x / CELLSIZE)
-                    yIndex = math.floor(y / CELLSIZE)
-                    # don't compute clicks outside board
-                    if xIndex < 8 and yIndex < 8:
-                        piece = board[xIndex, yIndex]
-                        # add piece on empty square
-                        if piece == None:
-                            board[xIndex, yIndex] = Checker(xIndex, yIndex, True)                            
-                        # remove piece on second click                        
-                        elif piece.red:                                                
-                            board[xIndex, yIndex] = None
+            if TEST_MODE:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    # right mouse click - add a WHITE checker
+                    if event.button == 3:
+                        point = getPointAtMouse()
+                        # don't compute clicks outside board
+                        if point.x < 8 and point.y < 8:
+                            piece = board[point]
+                            # add piece on empty square
+                            if piece is None:
+                                board[point] = Checker(point.x, point.y, False)
+                            # remove piece on second click
+                            elif not piece.red:
+                                board[point] = None
 
-            elif event.type == KEYDOWN:
+                    # left mouse click - add a RED checker
+                    elif event.button == 1:
+                        point = getPointAtMouse()
+                        # don't compute clicks outside board
+                        if point.x < 8 and point.y < 8:
+                            piece = board[point]
+                            # add piece on empty square
+                            if piece is None:
+                                board[point] = Checker(point.x, point.y, True)
+                                # remove piece on second click
+                            elif piece.red:
+                                board[point] = None
+
+                elif event.type == KEYDOWN:
+                    # switch turn
+                    if event.key == K_RETURN:
+                        turn = 'r' if turn == 'w' else 'w'
+                    # reset board
+                    elif event.key == K_r:
+                        board.reset()
+                    # clear board of all pieces
+                    elif event.key == K_c:
+                        board.clear()
+                    # king / un-king the piece at the mouse location
+                    elif event.key == K_k:
+                        point = getPointAtMouse()
+                        # only check squares on board
+                        if point.x < 8 and point.y < 8:
+                            if board.occupied(point):
+                                checker = board[point]
+                                if checker.kinged:
+                                    checker.deKing()
+                                else:
+                                    checker.becomeKing()
+                    elif event.key == K_p:
+                        point = getPointAtMouse()
+                        # only check squares on board
+                        if point.x < 8 and point.y < 8:
+                            if board.occupied(point):
+                                checker = board[point]
+                                moves, multiJumps = checker.calculateMoves(board)
+                                print("Moves:")
+                                print([str(m) for m in moves])
+
+                                if multiJumps:
+                                    print('Multi Jumps:')
+                                    for i in range(0, len(multiJumps)):
+                                        print([str(m) for m in multiJumps[i]])
+
+                    elif event.key == K_b:
+                        print('Board:')
+                        print(board)
+
+                    # Reset the board
+                    elif event.key == K_r:
+                        board.reset()
+
+            elif not TEST_MODE:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    # left mouse button
+                    if event.button == 1:
+                        if turn == 'r':
+                            point = getPointAtMouse()
+                            if point.x < 8 and point.y < 8:
+                                if board.occupied(point):
+                                    checker = board
+                                    print('checker %s%s selected' % ('ABCDEFGH'[point.x], point.y))
+                                    print(board)
+                        # turn = endTurn(turn)
+
+            #     elif event.type == KEYDOWN:
+
+            if event.type == KEYDOWN:
                 # activate test mode
                 if event.key == K_t:
                     TEST_MODE = not TEST_MODE
-                # switch turn
-                elif event.key == K_RETURN and TEST_MODE:
-                    turn = 'r' if turn == 'w' else 'w'
-                # reset board
-                elif event.key == K_r and TEST_MODE:
-                    board.reset()
-                # clear board of all pieces
-                elif event.key == K_c and TEST_MODE:
-                    board.clear()
-                # king / un-king the piece at the mouse location
-                elif event.key == K_k and TEST_MODE:
-                    x, y = pygame.mouse.get_pos()
-                    xIndex = math.floor(x / CELLSIZE)
-                    yIndex = math.floor(y / CELLSIZE)
-                    # only check squares on board
-                    if xIndex < 8 and yIndex < 8:
-                        if board[xIndex][yIndex] is not None:
-                            checker = board[xIndex, yIndex]
-                            if checker.kinged:
-                                checker.deKing()
-                            else:
-                                checker.becomeKing()
-                elif event.key == K_p and TEST_MODE:
-                    x, y = pygame.mouse.get_pos()
-                    xIndex = math.floor(x / CELLSIZE)
-                    yIndex = math.floor(y / CELLSIZE)
-                    # only check squares on board
-                    if xIndex < 8 and yIndex < 8:
-                        if board[xIndex][yIndex] is not None:
-                            checker = board[xIndex, yIndex]
-                            moves, multiJumps = checker.calculateMoves(board)
-                            print("Moves:")
-                            print([str(m) for m in moves])
-
-                            if multiJumps:
-                                print('Multi Jumps:')
-                                for i in range(0, len(multiJumps)):
-                                    print([str(m) for m in multiJumps[i]])
-
-                elif event.key ==K_b and TEST_MODE:
-                    print('Board:')
-                    print(board)
-
-                # Reset the board
-                elif event.key == K_r and TEST_MODE:
-                    board.reset()
-
-
                 # end game
                 elif event.key == K_q:
                     return
@@ -286,6 +297,15 @@ def drawChecker(x, y, piece):
     spriteRect = sprite.get_rect()
     spriteRect.center = (xCenter, yCenter)
     DISPLAYSURF.blit(sprite, spriteRect)
+
+def endTurn(turn):
+    return 'r' if turn == 'w' else 'w'
+
+def getPointAtMouse():
+    x, y = pygame.mouse.get_pos()
+    xIndex = math.floor(x / CELLSIZE)
+    yIndex = math.floor(y / CELLSIZE)
+    return Point(xIndex, yIndex)
 
 
 if __name__ == '__main__':
