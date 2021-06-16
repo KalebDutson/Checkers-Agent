@@ -1,4 +1,4 @@
-import random, pygame, sys,math
+import random, pygame, sys, math
 from pygame.locals import *
 import time
 from Board import *
@@ -19,7 +19,7 @@ CELLWIDTH = int(WINDOWWIDTH / CELLSIZE)
 CELLHEIGHT = int(WINDOWHEIGHT / CELLSIZE)
 
 REAL_WHITE = (255, 255, 255)
-BRIGHT_RED = (255,   0,   0)
+BRIGHT_RED = (255, 0, 0)
 BGCOLOR = (50, 50, 50)
 BLACK = (0, 0, 0)
 GRAY = pygame.Color("#f9f9f9")
@@ -58,12 +58,15 @@ def runGame():
 
     # can be value 'w' or 'r'
     turn = 'r'
+    selectedChecker = None
+    highlightMoves = []
 
     while True:  # main game loop
         for event in pygame.event.get():  # event handling loop
             if event.type == QUIT:
                 terminate()
 
+            # test mode event handling
             if TEST_MODE:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     # right mouse click - add a WHITE checker
@@ -138,18 +141,33 @@ def runGame():
 
             elif not TEST_MODE:
                 if event.type == pygame.MOUSEBUTTONDOWN:
+                    point = getPointAtMouse()
                     # left mouse button
-                    if event.button == 1:
-                        if turn == 'r':
-                            point = getPointAtMouse()
-                            if point.x < 8 and point.y < 8:
-                                if board.occupied(point):
-                                    checker = board
-                                    print('checker %s%s selected' % ('ABCDEFGH'[point.x], point.y))
-                                    print(board)
-                        # turn = endTurn(turn)
+                    if event.button == 1 and turn == 'r' and point.x < 8 and point.y < 8:
+                        # select a checker at the mouse location
+                        if board.occupied(point):
+                            if board[point].red:
+                                highlightMoves = []
+                                if selectedChecker != board[point]:
+                                    selectedChecker = board[point]
+                                    moves, multiJumps = selectedChecker.calculateMoves(board)
+                                    for m in moves:
+                                        highlightMoves.append(m)
+                                else:
+                                    selectedChecker = None
 
-            #     elif event.type == KEYDOWN:
+                        # move checker
+                        # TODO: add logic to remove jumped checkers
+                        else:
+                            validMove = None
+                            for m in highlightMoves:
+                                if point.x == m.dst.x and point.y == m.dst.y:
+                                    validMove = m
+                                    break
+                            if validMove and selectedChecker is not None:
+                                highlightMoves = []
+                                selectedChecker.move(validMove, board)
+                                selectedChecker = None
 
             if event.type == KEYDOWN:
                 # activate test mode
@@ -163,7 +181,8 @@ def runGame():
                     terminate()
 
         DISPLAYSURF.fill(BGCOLOR)
-        DISPLAYSURF.blit(BG_BOARD, (0,0))
+        DISPLAYSURF.blit(BG_BOARD, (0, 0))
+        drawHighlightPoints(highlightMoves)
         drawMsgTitle()
         drawStatus(turn)
         drawBoardState(board)
@@ -205,7 +224,7 @@ def showStartScreen():
         FPSCLOCK.tick(FPS)
 
         if checkForKeyPress():
-            pygame.event.get() # clear event queue
+            pygame.event.get()  # clear event queue
             return
 
 
@@ -224,11 +243,11 @@ def showGameOverScreen():
     drawPressKeyMsg()
     pygame.display.update()
     pygame.time.wait(500)
-    checkForKeyPress() # clear out any key presses in the event queue
+    checkForKeyPress()  # clear out any key presses in the event queue
 
     while True:
         if checkForKeyPress():
-            pygame.event.get() # clear event queue
+            pygame.event.get()  # clear event queue
             return
 
 
@@ -237,6 +256,7 @@ def drawMsgTitle():
     rect = surf.get_rect()
     rect.bottomleft = (WINDOWWIDTH - 170, WINDOWHEIGHT - 695)
     DISPLAYSURF.blit(surf, rect)
+
 
 def drawStatus(turn):
     font = pygame.font.Font('freesansbold.ttf', 16)
@@ -277,6 +297,7 @@ def drawStatus(turn):
             rect.bottomleft = (WINDOWWIDTH - 170, WINDOWHEIGHT - 570)
             DISPLAYSURF.blit(surf, rect)
 
+
 def drawBoardState(board):
     for i in range(0, len(board)):
         for j in range(0, len(board[i])):
@@ -292,20 +313,37 @@ def drawChecker(x, y, piece):
     else:
         sprite = RED_PIECE if piece.red else WHITE_PIECE
 
-    xCenter = x * CELLSIZE + math.floor(CELLSIZE/2)
-    yCenter = y * CELLSIZE + math.floor(CELLSIZE/2)
+    xCenter = x * CELLSIZE + math.floor(CELLSIZE / 2)
+    yCenter = y * CELLSIZE + math.floor(CELLSIZE / 2)
     spriteRect = sprite.get_rect()
     spriteRect.center = (xCenter, yCenter)
     DISPLAYSURF.blit(sprite, spriteRect)
 
+
 def endTurn(turn):
     return 'r' if turn == 'w' else 'w'
+
 
 def getPointAtMouse():
     x, y = pygame.mouse.get_pos()
     xIndex = math.floor(x / CELLSIZE)
     yIndex = math.floor(y / CELLSIZE)
     return Point(xIndex, yIndex)
+
+
+# takes an array of Points and highlights the boarders of the square at each point
+def drawHighlightPoints(moves):
+    # gradient of colors
+    colors = [(117, 207, 255), (108, 194, 241), (99, 182, 226), (90, 169, 212), (81, 157, 198), (72, 145, 184),
+              (63, 133, 171),(54, 121, 157), (45, 109, 144), (36, 98, 131), (45, 109, 144), (54, 121, 157),
+              (63, 133, 171),(72, 145, 184), (81, 157, 198), (90, 169, 212), (99, 182, 226), (108, 194, 241)]
+    # lower rate increases the speed at which the color changes along the gradient
+    rate = 150
+    index = (pygame.time.get_ticks() // rate) % len(colors)
+    for m in moves:
+        xCenter = m.dst.x * CELLSIZE + math.floor(CELLSIZE / 2)
+        yCenter = m.dst.y * CELLSIZE + math.floor(CELLSIZE / 2)
+        pygame.draw.circle(DISPLAYSURF, colors[index], (xCenter, yCenter), radius=25)
 
 
 if __name__ == '__main__':

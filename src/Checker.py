@@ -93,6 +93,16 @@ class Checker:
 
         return jumps, allMultiJumps
 
+    # Move checker to new position on board
+    # move: Move object
+    # board: Board object
+    def move(self, move, board):
+        board[self.position] = None
+        if not self.kinged:
+            self.kinged = move.king
+        self.position = move.dst
+        board[self.position] = self
+
     def becomeKing(self):
         self.kinged = True
 
