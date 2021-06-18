@@ -4,6 +4,9 @@ import time
 from Board import *
 from Checker import Checker
 
+# A global constant for controlling debug prints
+DEBUG = True
+
 FPS = 10
 # if you change the window height or width, you will need to recalculate the value for cell size
 WINDOWWIDTH = 900
@@ -123,9 +126,10 @@ def runGame():
                             if board.occupied(point):
                                 checker = board[point]
                                 moves = checker.calculateMoves(board)
-                                print("Moves:")
+                                pieceString = ("red %s" if checker.red else "white %s") % ("king" if checker.kinged else "piece")
+                                print("Moves for %s at %s%s:" % (pieceString, "ABCDEFGH"[checker.position.x], checker.position.y))
                                 print([str(m) for m in moves])
-                                
+
                     elif event.key == K_b:
                         print('Board:')
                         print(board)
