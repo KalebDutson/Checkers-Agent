@@ -60,6 +60,10 @@ class Checker:
         oneAhead = jumpStart + jumpDirection
         twoAhead = oneAhead + jumpDirection
 
+        if not board.onBoard(twoAhead):
+            # Jumping two ahead would be off the board
+            return parentMove
+
         if board.occupied(oneAhead) and board[oneAhead].red != self.red and not board.occupied(twoAhead):
             print("Can jump from %s to %s" % (jumpStart, twoAhead))
             king = not self.kinged and twoAhead.y == 0 if self.red else twoAhead.y == 7
@@ -67,7 +71,7 @@ class Checker:
             nextJump = Move(jumpStart, twoAhead, True, king, board[oneAhead].kinged, parentMove)
             # Recurse to chain on jumps possible from this next jump
             self.calculateChainJumps(board, nextJump)
-        else:
+        elif 'DEBUG' in globals() and DEBUG:
             print("Cannot jump from %s to %s: %s" % (jumpStart, twoAhead, "\n".join(filter(lambda s:len(s) > 0, [
                 "One ahead not occupied" if not board.occupied(oneAhead) else "",
                 "One ahead is same color" if board.occupied(oneAhead) and board[oneAhead].red == self.red else "",

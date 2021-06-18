@@ -65,6 +65,14 @@ class Board:
             # Everything off the board is occupied: pieces cannot move there
             return True
 
+    # Returns whether the given coordinate is on the board.
+    # Accepts a Point or an x value and a y value and returns a boolean.
+    def onBoard(self, x_or_point, y = None):
+        if not y:
+            return self.onBoard(x_or_point.x, x_or_point.y)
+        else:
+            return x_or_point >= 0 and x_or_point <= 7 and y >= 0 and y <= 7
+
     def reset(self):
         self.squares = []
         for x in range(0, 8):
