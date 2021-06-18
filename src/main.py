@@ -122,15 +122,10 @@ def runGame():
                         if point.x < 8 and point.y < 8:
                             if board.occupied(point):
                                 checker = board[point]
-                                moves, multiJumps = checker.calculateMoves(board)
+                                moves = checker.calculateMoves(board)
                                 print("Moves:")
                                 print([str(m) for m in moves])
-
-                                if multiJumps:
-                                    print('Multi Jumps:')
-                                    for i in range(0, len(multiJumps)):
-                                        print([str(m) for m in multiJumps[i]])
-
+                                
                     elif event.key == K_b:
                         print('Board:')
                         print(board)

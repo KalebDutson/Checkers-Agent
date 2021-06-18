@@ -9,12 +9,18 @@ class Move:
     # jump: Whether the move is a jump.
     # king: Whether the move will result in the piece newly becoming kinged.
     # regicidal: Whether the move will result in the taking of an enemy's king.
-    def __init__(self, src, dst, jump, king, regicidal):
+    def __init__(self, src, dst, jump, king, regicidal, parent = None):
         self.src = src
         self.dst = dst
         self.jump = jump
         self.king = king
         self.regicidal = regicidal
+        self.child = None
+        self.parent = parent
+        if self.parent:
+            # Only jumps can have a child move
+            assert self.parent.jump
+            self.parent.child = self
 
     def score(self):
         # This is where a move's utility value is calculated.
@@ -22,10 +28,20 @@ class Move:
         # Jump: 1 point
         # Killing a king adds 1 point to any move
         # We'll definitely want to change this experimentally
-        return self.king * 2 + self.jump + self.regicidal
+        base = self.king * 2 + self.jump + self.regicidal
 
-    def __str__(self):
-        r = "%s: " % self.score()
+        # Add the score of the best move chained to this one.
+        if self.child:
+            base += self.child.score()
+        
+        return base
+
+    def __str__(self, score=True):
+        if score:
+            r = "%s: " % self.score()
+        else:
+            r = ""
+        
         if self.jump:
             r += "jump "
         r += "%s%s to %s%s" % (
@@ -34,8 +50,14 @@ class Move:
             )
         if self.king:
             r += " and king"
+
+        if self.child:
+            r += " -> %s" % self.child.__str__(score=False)
+            
         
         return r
+
+    # Less than and greater than implementations for list sorting
 
     def __lt__(self, other):
         return self.score() < other.score()

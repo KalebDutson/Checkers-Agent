@@ -37,6 +37,20 @@ class Point:
     def __sub__(self, other):
         return Point(self.x - other.x, self.y - other.y)
 
-    # divide all points by divisor
-    def divide(self, divisor):
+    # divide all components by divisor, using floor division
+    def __floordiv__(self, divisor):
         return Point(self.x // divisor, self.y // divisor)
+
+    # divide all components by divisor, using floor division
+    def __truediv__(self, divisor):
+        return Point(self.x // divisor, self.y // divisor)
+
+    def length(self):
+        return sqrt(self.x ** 2 + self.y ** 2)
+
+    def normalize(self):
+        length = self.length()
+        return Point(self.x / length, self.y / length)
+
+ORIGIN = Point(0,0)
+UNIT = Point(1,1)

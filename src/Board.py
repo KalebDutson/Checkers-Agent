@@ -62,7 +62,7 @@ class Board:
         if point.x >= 0 and point.x < len(self.squares) and point.y >= 0 and point.y < len(self.squares[0]):
             return not not self[point.x, point.y]
         else:
-            # Everything off the board is occupied I guess
+            # Everything off the board is occupied: pieces cannot move there
             return True
 
     def reset(self):

@@ -37,61 +37,72 @@ class Checker:
         moves = [Move(self.position, m, False, not self.kinged and m.y == 0 if self.red else m.y == 8, False) for m in diags 
                 if not board.occupied(m) and (self.kinged or (m.y - self.position.y < 0) == self.red)]
 
-        jumps, multiJumps = self.calculateJumps(board, diags)
+        jumps = self.calculateJumps(board, diags)
 
         moves += jumps
 
         moves.sort(reverse=True)
 
-        return moves, multiJumps
+        return moves
+
+    # Recursively calculates jumps that can be performed following an initial jump.
+    # Contrary to the rules Michael learned in 1st grade, multi-jumps can only
+    # be done in a straight line- no zigzagging.
+    #
+    # Parameters:
+    #   board:      The instance of the Board class being used by the current game.
+    #   parentMove: The Move instance that should parent any jumps found from here.
+    # Returns:
+    #   parentMove, with any valid jump set to its child
+    def calculateChainJumps(self, board, parentMove):
+        jumpStart = parentMove.dst
+        jumpDirection = (jumpStart - parentMove.src) / 2
+        oneAhead = jumpStart + jumpDirection
+        twoAhead = oneAhead + jumpDirection
+
+        if board.occupied(oneAhead) and board[oneAhead].red != self.red and not board.occupied(twoAhead):
+            print("Can jump from %s to %s" % (jumpStart, twoAhead))
+            king = not self.kinged and twoAhead.y == 0 if self.red else twoAhead.y == 7
+            # Construct the jump, setting it to the child of parentMove
+            nextJump = Move(jumpStart, twoAhead, True, king, board[oneAhead].kinged, parentMove)
+            # Recurse to chain on jumps possible from this next jump
+            self.calculateChainJumps(board, nextJump)
+        else:
+            print("Cannot jump from %s to %s: %s" % (jumpStart, twoAhead, "\n".join(filter(lambda s:len(s) > 0, [
+                "One ahead not occupied" if not board.occupied(oneAhead) else "",
+                "One ahead is same color" if board.occupied(oneAhead) and board[oneAhead].red == self.red else "",
+                "Two ahead is occupied" if board.occupied(twoAhead) else ""
+            ]))))
+
+        return parentMove
 
     # board: current board state
     # diags: array of diagonals the piece can possible move to
     # returns:
-    #   jumps: array of moves that involve a jump
-    #   multiJumps: 2D array of possible multi-jumps. ex: [[moveA.1, moveA.2, moveA.3],[moveB.1, moveB.2] ... etc]
+    #   jumps: array of moves that involve a jump, with subsequent jumps in their child heirarchy as applicable.
     def calculateJumps(self, board, diags):
-        allMultiJumps = []
+        # A list of valid jumps that this piece can make.
         jumps = []
-        newPositions = []
+        # Calculate all the initial jumps possible from the current position
         for neighbor in diags:
-            if board.occupied(neighbor) and board[neighbor].red != self.red and not board.occupied(neighbor + (neighbor - self.position)) and (self.kinged or ((neighbor + (neighbor - self.position)).y - self.position.y < 0) == self.red):
-                dst = neighbor + (neighbor - self.position)
-                king = not self.kinged and (neighbor + (neighbor - self.position)).y == 0 if self.red else (neighbor + (neighbor - self.position)).y == 7
-                if dst not in newPositions:
-                    newPositions.append(dst)
-                jumps.append(Move(self.position, dst, True, king, board[neighbor].kinged))
+            # Whether the neighbor has a jumpable piece
+            jumpable = board.occupied(neighbor) and board[neighbor].red != self.red
+            # The square two ahead of this checker in the direction from this to neighbor
+            twoAhead = (neighbor + (neighbor - self.position))
+            # Whether this piece can move into twoAhead
+            canMove = (self.kinged or (twoAhead.y - self.position.y < 0) == self.red)
+            # If the move is legal, the neighbor has a jumpable piece, and there's nothing on the
+            # square two ahead, then add to the list of jumps.
+            if jumpable and canMove and not board.occupied(twoAhead):
+                # Whether the jump would result in this piece being newly kinged.
+                king = not self.kinged and twoAhead.y == 0 if self.red else twoAhead.y == 7
+                jumps.append(Move(self.position, twoAhead, True, king, board[neighbor].kinged))
 
         # calculate possible squares in a straight line that can be multi-jumped to
-        for p in newPositions:
-            multiJumps = []
-            diff = (self.position - p)
-            enemyDiff = diff.divide(2)
+        for j in jumps:
+            self.calculateChainJumps(board, j)
 
-            initialEnemyDst = self.position - enemyDiff
-            doubleDst = p - diff
-            enemyDst = p - enemyDiff
-            # Check for double jump availability
-            if not board.occupied(doubleDst) and 8 > doubleDst.x > 0 and 8 > doubleDst.y > 0 and board.occupied(enemyDst):
-                if board[enemyDst].red != self.red:
-                    king = not self.kinged and (enemyDst + (enemyDst - p)).y == 0 if self.red else (enemyDst + (enemyDst - p)).y == 7
-                    # add initial jump
-                    multiJumps.append(Move(self.position, p, True, king, board[initialEnemyDst].kinged))
-                    multiJumps.append(Move(p, doubleDst, True, king, board[enemyDst].kinged))
-                    # check this new point, if it is empty, a triple-jump is possible
-                    tripleDst = doubleDst - diff
-                    enemyDst = doubleDst - enemyDiff
-
-                # check for triple jump availability
-                if not board.occupied(tripleDst) and 8 > tripleDst.x > 0 and 8 > tripleDst.y > 0 and board.occupied(enemyDst):
-                    if board[enemyDst].red != self.red:
-                        king = not self.kinged and (enemyDst + (enemyDst - doubleDst)).y == 0 if self.red else (enemyDst + (enemyDst - doubleDst)).y == 7
-                        multiJumps.append(Move(doubleDst, tripleDst, True, king, board[enemyDst].kinged))
-
-            if len(multiJumps) > 0:
-                allMultiJumps.append(multiJumps)
-
-        return jumps, allMultiJumps
+        return jumps
 
     # Move checker to new position on board
     # move: Move object
