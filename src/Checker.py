@@ -29,7 +29,6 @@ class Checker:
 
     # returns:
     #   moves: list of single moves the checker can take
-    #   multiJumps: list of multiple jumps the checker can take
     def calculateMoves(self, board):
         diags = self.getDiagonals(board)
 
@@ -71,6 +70,7 @@ class Checker:
             nextJump = Move(jumpStart, twoAhead, True, king, board[oneAhead].kinged, parentMove)
             # Recurse to chain on jumps possible from this next jump
             self.calculateChainJumps(board, nextJump)
+
         elif 'DEBUG' in globals() and DEBUG:
             print("Cannot jump from %s to %s: %s" % (jumpStart, twoAhead, "\n".join(filter(lambda s:len(s) > 0, [
                 "One ahead not occupied" if not board.occupied(oneAhead) else "",
@@ -108,15 +108,46 @@ class Checker:
 
         return jumps
 
-    # Move checker to new position on board
+    # Move checker to new position on board and jump enemy checkers if applicable
+    # Find the root Move, then execute all moves down to 'move' argument
     # move: Move object
     # board: Board object
     def move(self, move, board):
+        # find root parent, execute all Moves down to 'move'
+        root = self.__getMoveRoot(move)
+        print('The root of this move is: %s' % str(root))
+        self.__moveThroughTree(board, root, root, move)
+
+    # Recursively execute all moves in Move tree from root Move to final Move
+    # board: Board object
+    # current: current Move being executed
+    # root: root Move
+    # final: final Move to be executed
+    def __moveThroughTree(self, board, current, root, final):
+        # remove jumped checker if applicable
+        if current.jump:
+            direction = (current.dst - current.src) / 2
+            jumpedPos = current.src + direction
+            board[jumpedPos] = None
+            print('Jumped checker at (%s, %s) | %s%s' % (jumpedPos.x, jumpedPos.y, 'ABCDEFG'[jumpedPos.x], jumpedPos.y))
+        # move checker
         board[self.position] = None
         if not self.kinged:
-            self.kinged = move.king
-        self.position = move.dst
+            self.kinged = current.king
+        self.position = current.dst
         board[self.position] = self
+
+        if current != final:
+            # if current move is not final, it must have a child
+            assert current.child is not None
+            self.__moveThroughTree(board, current.child, root, final)
+
+    # recursively searches for the root of a Move
+    # returns the root Move
+    def __getMoveRoot(self, move):
+        if move.parent is None:
+            return move
+        return self.__getMoveRoot(move.parent)
 
     def becomeKing(self):
         self.kinged = True
