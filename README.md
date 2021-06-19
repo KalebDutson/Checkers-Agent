@@ -1,5 +1,6 @@
 ## Testing Mode
-Testing mode allows you to control who's turn it is, add / remove pieces to the board, and print a piece's list of moves to the terminal.
+Testing mode allows you to control who's turn it is, add / remove pieces to the board, and print a piece's list of moves
+to the terminal.
 #### Hotkeys
 * `T`: Activate testing mode
 * `R`: Reset board
@@ -10,3 +11,4 @@ Testing mode allows you to control who's turn it is, add / remove pieces to the 
 * `ENTER`: Switch player turn
 * `Left Mouse`: Add a **RED** piece to the board. Left click again to remove.
 * `Right Mouse`: Add a **WHITE** piece to the board. Right click again to remove.
+* `Middle Mouse`: Print info of checker at mouse location.
