@@ -46,7 +46,7 @@ class Move:
         
         return base
 
-    def __str__(self, score=True, direction=False):
+    def __str__(self, score=True, direction=True):
         if score:
             r = "%s: " % self.score()
         else:
@@ -64,10 +64,9 @@ class Move:
         if self.child:
             r += " -> %s" % self.child.__str__(score=False)
 
-        if direction:
-            r += ' | Dir: %s' % ((self.dst - self.src) / 2)
-            
-        
+        if direction and self.jump:
+            r += ' in Dir: %s' % ((self.dst - self.src) / 2)
+
         return r
 
     # Less than and greater than implementations for list sorting
