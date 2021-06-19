@@ -30,6 +30,11 @@ class Move:
         # We'll definitely want to change this experimentally
         base = self.king * 2 + self.jump + self.regicidal
 
+        # Reduce utility of moving a piece out of the back row
+        # (WHITE piece) Moving away from back row : -0.5 points
+        if self.src.y == 0:
+            base -= 0.5
+
         # Add the score of the best move chained to this one.
         if self.child:
             base += self.child.score()
@@ -64,3 +69,6 @@ class Move:
     
     def __gt__(self, other):
         return self.score() > other.score()
+
+    def __eq__(self, other):
+        return self.score() == other.score()

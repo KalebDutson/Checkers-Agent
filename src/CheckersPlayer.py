@@ -1,3 +1,6 @@
+import random
+
+
 class CheckersPlayer:
     # Create new player
     # board: Board player is playing on
@@ -55,6 +58,13 @@ class CheckersPlayer:
                 if absBest < relBest:
                     absBest = relBest
                     bestChecker = checker
+                # Randomly choose best move if both best moves have the same value
+                # Keeps agent unpredictable
+                elif absBest == relBest:
+                    choice = random.randint(0,1)
+                    if choice == 1:
+                        absBest = relBest
+                        bestChecker = checker
 
         return absBest, bestChecker
 
