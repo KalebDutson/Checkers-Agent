@@ -75,6 +75,7 @@ class Board:
         else:
             return x_or_point >= 0 and x_or_point <= 7 and y >= 0 and y <= 7
 
+    # adds Checker object to board at Checker's position
     def addChecker(self, checker):
         self.squares[checker.position.x][checker.position.y] = checker
 
