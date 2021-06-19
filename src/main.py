@@ -3,6 +3,7 @@ from pygame.locals import *
 import time
 from Board import *
 from Checker import Checker
+from Move import Move
 
 # A global constant for controlling debug prints
 DEBUG = True
@@ -76,14 +77,14 @@ def runGame():
                     if event.button == 3:
                         point = getPointAtMouse()
                         # don't compute clicks outside board
-                        if point.x < 8 and point.y < 8:
+                        if pointOnBoard(point):
                             piece = board[point]
                             # add piece on empty square
-                            if piece is None:
-                                board[point] = Checker(point.x, point.y, False)
+                            if not board.occupied(point):
+                                board.addChecker(Checker(point.x, point.y, False))
                             # remove piece on second click
                             elif not piece.red:
-                                board[point] = None
+                                board.remove(point)
 
                     # left mouse click - add a RED checker
                     elif event.button == 1:
@@ -93,10 +94,26 @@ def runGame():
                             piece = board[point]
                             # add piece on empty square
                             if piece is None:
-                                board[point] = Checker(point.x, point.y, True)
+                                board.addChecker(Checker(point.x, point.y, True))
                                 # remove piece on second click
                             elif piece.red:
-                                board[point] = None
+                                board.remove(point)
+
+                    # middle mouse click - display info of checker at mouse
+                    elif event.button == 2:
+                        point = getPointAtMouse()
+                        # don't compute clicks outside board
+                        if pointOnBoard(point):
+                            if board.occupied(point):
+                                checker = board[point]
+                                print('Checker Info')
+                                print('Pos: %s | Player: %s | King: %s' % (
+                                    str(checker.position),
+                                    'Red' if checker.red else 'White',
+                                    checker.kinged
+                                ))
+                            else:
+                                print('No checker here')
 
                 elif event.type == KEYDOWN:
                     # switch turn
@@ -111,8 +128,7 @@ def runGame():
                     # king / un-king the piece at the mouse location
                     elif event.key == K_k:
                         point = getPointAtMouse()
-                        # only check squares on board
-                        if point.x < 8 and point.y < 8:
+                        if pointOnBoard(point):
                             if board.occupied(point):
                                 checker = board[point]
                                 if checker.kinged:
@@ -142,28 +158,36 @@ def runGame():
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     point = getPointAtMouse()
                     # left mouse button
-                    if event.button == 1 and turn == 'r' and point.x < 8 and point.y < 8:
+                    if event.button == 1 and turn == 'r' and pointOnBoard(point):
                         # select a checker at the mouse location
                         if board.occupied(point):
                             if board[point].red:
                                 highlightMoves = []
+                                # if checker clicked is not currently selected
                                 if selectedChecker != board[point]:
+                                    # select checker at point
                                     selectedChecker = board[point]
-                                    moves, multiJumps = selectedChecker.calculateMoves(board)
-                                    for m in moves:
+                                    moves = selectedChecker.calculateMoves(board)
+                                    # unpack all the children of each move and add them to list of highlighted moves
+                                    unpackedMoves = unpackMoves(moves)
+                                    for m in unpackedMoves:
                                         highlightMoves.append(m)
+
+                                # unselect selected checker
                                 else:
                                     selectedChecker = None
 
-                        # move checker
-                        # TODO: add logic to remove jumped checkers
+                        # move or jump checker to empty square
                         else:
                             validMove = None
+
+                            # find the valid move
                             for m in highlightMoves:
                                 if point.x == m.dst.x and point.y == m.dst.y:
                                     validMove = m
                                     break
                             if validMove and selectedChecker is not None:
+
                                 highlightMoves = []
                                 selectedChecker.move(validMove, board)
                                 selectedChecker = None
@@ -258,6 +282,9 @@ def drawMsgTitle():
 
 
 def drawStatus(turn):
+    yDist = 670  # initial distance to subtract from WINDOWHEIGHT to put messages in left corner
+    yInc = 25  # y difference for each subsequent message
+
     font = pygame.font.Font('freesansbold.ttf', 16)
     s = 'no one\'s turn'
     color = REAL_WHITE
@@ -270,32 +297,33 @@ def drawStatus(turn):
 
     surf = font.render(s, True, color)
     rect = surf.get_rect()
-    rect.bottomleft = (WINDOWWIDTH - 170, WINDOWHEIGHT - 670)
+    rect.bottomleft = (WINDOWWIDTH - 170, WINDOWHEIGHT - yDist)
     DISPLAYSURF.blit(surf, rect)
 
     if TEST_MODE:
+        yDist -= yInc  # increment y distance for message
         surf = font.render('Testing Mode active', True, BRIGHT_RED)
         rect = surf.get_rect()
-        rect.bottomleft = (WINDOWWIDTH - 170, WINDOWHEIGHT - 645)
+        rect.bottomleft = (WINDOWWIDTH - 170, WINDOWHEIGHT - yDist)
         DISPLAYSURF.blit(surf, rect)
 
+        yDist -= yInc  # increment y distance for message
         surf = font.render('Square at Mouse', True, REAL_WHITE)
         rect = surf.get_rect()
-        rect.bottomleft = (WINDOWWIDTH - 170, WINDOWHEIGHT - 595)
+        rect.bottomleft = (WINDOWWIDTH - 170, WINDOWHEIGHT - yDist)
         DISPLAYSURF.blit(surf, rect)
 
         # show square index at mouse position
-        x, y = pygame.mouse.get_pos()
-        xIndex = math.floor(x / CELLSIZE)
-        yIndex = math.floor(y / CELLSIZE)
+        point = getPointAtMouse()
         letters = "ABCDEFGH"
-        # don't compute clicks outside board
-        if xIndex < 8 and yIndex < 8:
-            surf = font.render('%s%s | Index: (%s, %s)' % (letters[xIndex], yIndex, xIndex, yIndex), True, REAL_WHITE)
+        # don't compute outside board
+        if pointOnBoard(point):
+            yDist -= yInc  # increment y distance for message
+            # display the index of the square at the mouse location
+            surf = font.render('%s%s | Index: (%s, %s)' % (letters[point.x], point.y, point.x, point.y), True, REAL_WHITE)
             rect = surf.get_rect()
-            rect.bottomleft = (WINDOWWIDTH - 170, WINDOWHEIGHT - 570)
+            rect.bottomleft = (WINDOWWIDTH - 170, WINDOWHEIGHT - yDist)
             DISPLAYSURF.blit(surf, rect)
-
 
 def drawBoardState(board):
     for i in range(0, len(board)):
@@ -329,9 +357,30 @@ def getPointAtMouse():
     yIndex = math.floor(y / CELLSIZE)
     return Point(xIndex, yIndex)
 
+def pointOnBoard(point):
+    return point.x < 8 and point.y < 8
 
-# takes an array of Points and highlights the boarders of the square at each point
+# Gets all the children of each move in moves
+# moves: list of Move objects
+# returns list of all child and parent Move objects from moves
+def unpackMoves(moves):
+    allMoves = []
+    for m in moves:
+        parent = m
+        allMoves.append(m)
+        maxChildren = 2  # max number of children a move can have is 2 (triple jump)
+        # find all children
+        for i in range(0, maxChildren):
+            if parent.child is None:
+                break
+            allMoves.append(parent.child)
+            parent = parent.child
+    return allMoves
+
+# Takes an array of Moves and highlights the square at each point
 def drawHighlightPoints(moves):
+    if len(moves) < 1:
+        return
     # gradient of colors
     colors = [(117, 207, 255), (108, 194, 241), (99, 182, 226), (90, 169, 212), (81, 157, 198), (72, 145, 184),
               (63, 133, 171),(54, 121, 157), (45, 109, 144), (36, 98, 131), (45, 109, 144), (54, 121, 157),
@@ -340,6 +389,7 @@ def drawHighlightPoints(moves):
     rate = 150
     index = (pygame.time.get_ticks() // rate) % len(colors)
     for m in moves:
+        assert isinstance(m, Move), '%s of type %s is not type %s' % (m, type(m), type(Move))
         xCenter = m.dst.x * CELLSIZE + math.floor(CELLSIZE / 2)
         yCenter = m.dst.y * CELLSIZE + math.floor(CELLSIZE / 2)
         pygame.draw.circle(DISPLAYSURF, colors[index], (xCenter, yCenter), radius=25)
