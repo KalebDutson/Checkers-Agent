@@ -35,13 +35,18 @@ class Move:
         if self.src.y == 0:
             base -= 0.5
 
+        # Reduce utility of moving piece into center 2 squares
+        # Move into center: -0.2 points
+        if self.dst.x == 3 or self.dst.x == 4:
+            base -= 0.2
+
         # Add the score of the best move chained to this one.
         if self.child:
             base += self.child.score()
         
         return base
 
-    def __str__(self, score=True):
+    def __str__(self, score=True, direction=False):
         if score:
             r = "%s: " % self.score()
         else:
@@ -58,6 +63,9 @@ class Move:
 
         if self.child:
             r += " -> %s" % self.child.__str__(score=False)
+
+        if direction:
+            r += ' | Dir: %s' % ((self.dst - self.src) / 2)
             
         
         return r
