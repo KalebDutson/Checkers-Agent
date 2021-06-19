@@ -218,7 +218,7 @@ def runGame():
                     terminate()
 
         # Allow agent to play on White player's turn
-        if turn == 'w':
+        if turn == 'w' and not TEST_MODE:
             # wait before executing agent's turn
             pygame.time.delay(turnDelay)
             agentPlayer.executeBestMove()
