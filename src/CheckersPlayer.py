@@ -11,7 +11,10 @@ class CheckersPlayer:
     # Determine the best move and move checker
     def executeBestMove(self):
         move, checker = self.calculateBestMove()
-        self.moveChecker(checker, move)
+        if move or checker is not None:
+            self.moveChecker(checker, move)
+        else:
+            print("%s has no moves it can make!!" % str(self))
 
     def moveChecker(self, checker, move):
         checker.move(move, self.board)
@@ -54,3 +57,6 @@ class CheckersPlayer:
                     bestChecker = checker
 
         return absBest, bestChecker
+
+    def __str__(self):
+        return '%s Player' % ('Red' if self.red else 'White')
