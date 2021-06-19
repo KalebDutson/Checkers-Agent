@@ -115,7 +115,6 @@ class Checker:
     def move(self, move, board):
         # find root parent, execute all Moves down to 'move'
         root = self.__getMoveRoot(move)
-        print('The root of this move is: %s' % str(root))
         self.__moveThroughTree(board, root, root, move)
 
     # Recursively execute all moves in Move tree from root Move to final Move

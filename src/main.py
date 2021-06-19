@@ -3,6 +3,7 @@ from pygame.locals import *
 import time
 from Board import *
 from Checker import Checker
+from CheckersPlayer import CheckersPlayer
 from Move import Move
 
 # A global constant for controlling debug prints
@@ -60,9 +61,18 @@ def runGame():
 
     board = Board()
 
+    humanPlayer = CheckersPlayer(board, red=True, human=True)
+    agentPlayer = CheckersPlayer(board, red=False, human=False)
+
     # can be value 'w' or 'r'
     turn = 'r'
-    selectedChecker = None
+    # updated to true if the human or agent makes a move. Updates the turn at the end of event loop
+    turnOver = False
+    # number of millis the agent has to wait before moving a piece
+    turnDelay = 700
+
+    # selected checker of the human player
+    selected = None
     highlightMoves = []
 
     while True:  # main game loop
@@ -77,7 +87,7 @@ def runGame():
                     if event.button == 3:
                         point = getPointAtMouse()
                         # don't compute clicks outside board
-                        if pointOnBoard(point):
+                        if board.onBoard(point):
                             piece = board[point]
                             # add piece on empty square
                             if not board.occupied(point):
@@ -102,8 +112,7 @@ def runGame():
                     # middle mouse click - display info of checker at mouse
                     elif event.button == 2:
                         point = getPointAtMouse()
-                        # don't compute clicks outside board
-                        if pointOnBoard(point):
+                        if board.onBoard(point):
                             if board.occupied(point):
                                 checker = board[point]
                                 print('Checker Info')
@@ -128,7 +137,7 @@ def runGame():
                     # king / un-king the piece at the mouse location
                     elif event.key == K_k:
                         point = getPointAtMouse()
-                        if pointOnBoard(point):
+                        if board.onBoard(point):
                             if board.occupied(point):
                                 checker = board[point]
                                 if checker.kinged:
@@ -145,6 +154,10 @@ def runGame():
                                 pieceString = ("red %s" if checker.red else "white %s") % ("king" if checker.kinged else "piece")
                                 print("Moves for %s at %s%s:" % (pieceString, "ABCDEFGH"[checker.position.x], checker.position.y))
                                 print([str(m) for m in moves])
+                    # execute the best move for player of current turn
+                    elif event.key == K_SPACE:
+                        player = humanPlayer if turn == 'r' else agentPlayer
+                        player.executeBestMove()
 
                     elif event.key == K_b:
                         print('Board:')
@@ -158,16 +171,16 @@ def runGame():
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     point = getPointAtMouse()
                     # left mouse button
-                    if event.button == 1 and turn == 'r' and pointOnBoard(point):
-                        # select a checker at the mouse location
+                    if event.button == 1 and turn == 'r' and board.onBoard(point):
+                        # human player selects a checker at the mouse location
                         if board.occupied(point):
                             if board[point].red:
                                 highlightMoves = []
                                 # if checker clicked is not currently selected
-                                if selectedChecker != board[point]:
+                                if selected != board[point]:
                                     # select checker at point
-                                    selectedChecker = board[point]
-                                    moves = selectedChecker.calculateMoves(board)
+                                    selected = board[point]
+                                    moves = selected.calculateMoves(board)
                                     # unpack all the children of each move and add them to list of highlighted moves
                                     unpackedMoves = unpackMoves(moves)
                                     for m in unpackedMoves:
@@ -175,22 +188,23 @@ def runGame():
 
                                 # unselect selected checker
                                 else:
-                                    selectedChecker = None
+                                    selected = None
 
-                        # move or jump checker to empty square
+                        # move or jump human player's checker to empty square
                         else:
                             validMove = None
 
-                            # find the valid move
+                            # check if human clicked a valid move
                             for m in highlightMoves:
                                 if point.x == m.dst.x and point.y == m.dst.y:
                                     validMove = m
                                     break
-                            if validMove and selectedChecker is not None:
-
+                            # Move selected checker and end turn
+                            if validMove and selected is not None:
                                 highlightMoves = []
-                                selectedChecker.move(validMove, board)
-                                selectedChecker = None
+                                humanPlayer.moveChecker(selected, validMove)
+                                selected = None
+                                turnOver = True
 
             if event.type == KEYDOWN:
                 # activate test mode
@@ -203,11 +217,23 @@ def runGame():
                 elif event.key == K_ESCAPE:
                     terminate()
 
+        # Allow agent to play on White player's turn
+        if turn == 'w':
+            # wait before executing agent's turn
+            pygame.time.delay(turnDelay)
+            agentPlayer.executeBestMove()
+            turnOver = True
+
+        # switch turn to other player
+        if turnOver:
+            turn = endTurn(turn)
+            turnOver = False
+
         DISPLAYSURF.fill(BGCOLOR)
         DISPLAYSURF.blit(BG_BOARD, (0, 0))
         drawHighlightPoints(highlightMoves)
         drawMsgTitle()
-        drawStatus(turn)
+        drawStatus(turn, board)
         drawBoardState(board)
         pygame.display.update()
         FPSCLOCK.tick(FPS)
@@ -281,7 +307,7 @@ def drawMsgTitle():
     DISPLAYSURF.blit(surf, rect)
 
 
-def drawStatus(turn):
+def drawStatus(turn, board):
     yDist = 670  # initial distance to subtract from WINDOWHEIGHT to put messages in left corner
     yInc = 25  # y difference for each subsequent message
 
@@ -317,7 +343,7 @@ def drawStatus(turn):
         point = getPointAtMouse()
         letters = "ABCDEFGH"
         # don't compute outside board
-        if pointOnBoard(point):
+        if board.onBoard(point):
             yDist -= yInc  # increment y distance for message
             # display the index of the square at the mouse location
             surf = font.render('%s%s | Index: (%s, %s)' % (letters[point.x], point.y, point.x, point.y), True, REAL_WHITE)
@@ -357,8 +383,6 @@ def getPointAtMouse():
     yIndex = math.floor(y / CELLSIZE)
     return Point(xIndex, yIndex)
 
-def pointOnBoard(point):
-    return point.x < 8 and point.y < 8
 
 # Gets all the children of each move in moves
 # moves: list of Move objects
