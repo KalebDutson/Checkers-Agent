@@ -57,7 +57,7 @@ class Board:
         return len(self.squares)
 
     # Returns whether the square at the point is occupied
-    # point is the tuple (x,y)
+    # point is the Point(x,y)
     def occupied(self, point):
         if point.x >= 0 and point.x < len(self.squares) and point.y >= 0 and point.y < len(self.squares[0]):
             return not not self[point.x, point.y]
@@ -68,10 +68,19 @@ class Board:
     # Returns whether the given coordinate is on the board.
     # Accepts a Point or an x value and a y value and returns a boolean.
     def onBoard(self, x_or_point, y = None):
-        if not y:
+        if y is None:
+            assert isinstance(x_or_point, Point), '%s of type %s is not type Point' % (x_or_point, type(x_or_point))
+
             return self.onBoard(x_or_point.x, x_or_point.y)
         else:
             return x_or_point >= 0 and x_or_point <= 7 and y >= 0 and y <= 7
+
+    def addChecker(self, checker):
+        self.squares[checker.position.x][checker.position.y] = checker
+
+    # removes object at Point(x,y)
+    def remove(self, point):
+        self.squares[point.x][point.y] = None
 
     def reset(self):
         self.squares = []
