@@ -50,10 +50,9 @@ def main():
     WHITE_PIECE = pygame.image.load('../imgs/white_piece.png').convert_alpha()
     WHITE_KING = pygame.image.load('../imgs/white_king.png').convert_alpha()
 
-    # showStartScreen()
     while True:
-        runGame()
-        showGameOverScreen()
+        msg = runGame()
+        showGameOverScreen(msg)
 
 
 def runGame():
@@ -219,6 +218,7 @@ def runGame():
 
         # Allow agent to play on White player's turn
         if turn == 'w' and not TEST_MODE:
+            assert agentPlayer.canMove() and not agentPlayer.defeated()
             # wait before executing agent's turn
             pygame.time.delay(turnDelay)
             agentPlayer.executeBestMove()
@@ -238,11 +238,30 @@ def runGame():
         pygame.display.update()
         FPSCLOCK.tick(FPS)
 
+        # Determine if game is over
+        # return game state upon game end
+        if gameOverMsg(humanPlayer, agentPlayer) is not None and not TEST_MODE:
+            return gameOverMsg(humanPlayer, agentPlayer)
+
+# Return a message for who won
+# Returns None if a tie or win is not found
+# Assumes that the human player is RED and the agent player is WHITE
+def gameOverMsg(human, agent):
+    msg = None
+    if human.defeated() and agent.defeated():
+        msg = 'Illegal'
+    elif human.defeated():
+        msg = 'White Wins'
+    elif agent.defeated():
+        msg = 'Red Wins'
+    elif not human.canMove() or not agent.canMove():
+        msg = 'Draw'
+    return msg
 
 def drawPressKeyMsg():
-    pressKeySurf = BASICFONT.render('Press a key to play.', True, RED)
+    pressKeySurf = BASICFONT.render('Press a key to play.', True, BRIGHT_RED)
     pressKeyRect = pressKeySurf.get_rect()
-    pressKeyRect.topleft = (WINDOWWIDTH - 200, WINDOWHEIGHT - 30)
+    pressKeyRect.bottomleft = (WINDOWWIDTH - 170, WINDOWHEIGHT - 30)
     DISPLAYSURF.blit(pressKeySurf, pressKeyRect)
 
 
@@ -282,13 +301,13 @@ def terminate():
     sys.exit()
 
 
-def showGameOverScreen():
-    gameOverFont = pygame.font.Font('freesansbold.ttf', 120)
-    gameSurf = gameOverFont.render('Game Over', True, WHITE, RED)
+def showGameOverScreen(msg):
+    gameOverFont = pygame.font.Font('freesansbold.ttf', 30)
+    gameSurf = gameOverFont.render(msg, True, BRIGHT_RED)
     gameRect = gameSurf.get_rect()
-    gameRect.midtop = (math.floor(WINDOWWIDTH / 2), 10)
-
+    gameRect.bottomleft = (WINDOWWIDTH - 170, WINDOWHEIGHT - 500)
     DISPLAYSURF.blit(gameSurf, gameRect)
+
     drawPressKeyMsg()
     pygame.display.update()
     pygame.time.wait(500)
