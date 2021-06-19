@@ -33,7 +33,7 @@ class Checker:
         diags = self.getDiagonals(board)
 
         # Empty squares this piece could move to
-        moves = [Move(self.position, m, False, not self.kinged and m.y == 0 if self.red else m.y == 8, False) for m in diags 
+        moves = [Move(self.position, m, False, not self.kinged and m.y == 0 if self.red else m.y == 7, False) for m in diags
                 if not board.occupied(m) and (self.kinged or (m.y - self.position.y < 0) == self.red)]
 
         jumps = self.calculateJumps(board, diags)
