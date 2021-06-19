@@ -11,6 +11,20 @@ class CheckersPlayer:
         self.red = red
         self.human = human
 
+    # Returns true if player has no pieces left
+    def defeated(self):
+        return len(self.getCheckers()) < 1
+
+    # Returns true if player has available moves
+    def canMove(self):
+        if self.defeated():
+            return False
+        checkers = self.getCheckers()
+        for checker in checkers:
+            if len(checker.calculateMoves(self.board)) > 0:
+                return True
+        return False
+
     # Determine the best move and move checker
     def executeBestMove(self):
         move, checker = self.calculateBestMove()
@@ -50,6 +64,15 @@ class CheckersPlayer:
             # Relative best move, the best move this checker can make
             # assumes that checker.calculateMoves returns a sorted list of moves with the best move at index 0
             relBest = moves[0]
+
+            # If a checker has 2 moves with the same score,
+            # randomly choose a move to be the relative best for this checker
+            if len(moves) > 1:
+                if moves[0] == moves[1]:
+                    choice = random.randint(0,1)
+                    if choice == 1:
+                        relBest = moves[1]
+
             if absBest is None:
                 absBest = relBest
                 bestChecker = checker
