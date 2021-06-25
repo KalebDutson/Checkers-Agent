@@ -1,6 +1,5 @@
 import random
 
-
 class CheckersPlayer:
     # Create new player
     # board: Board player is playing on
@@ -11,18 +10,18 @@ class CheckersPlayer:
         self.red = red
         self.human = human
 
-    # Returns true if player has no pieces left
+    # Returns true if player has no pieces left or cannot move
     def defeated(self):
-        return len(self.getCheckers()) < 1
+        return len(self.getCheckers()) < 1 or not self.canMove()
 
     # Returns true if player has available moves
     def canMove(self):
-        if self.defeated():
-            return False
         checkers = self.getCheckers()
         for checker in checkers:
             if len(checker.calculateMoves(self.board)) > 0:
+                # At least one piece has at least one possible move
                 return True
+        # No moves were found for any owned checker (or there are no owned checkers)
         return False
 
     # Determine the best move and move checker
@@ -44,6 +43,9 @@ class CheckersPlayer:
                 checker = self.board.squares[i][j]
                 if checker is not None and checker.red == self.red:
                     checkers.append(checker)
+
+        # Shuffle the checkers so the AI doesn't always stall or fold with the same piece.
+        random.shuffle(checkers)
         return checkers
 
     # Calculates the best possible move from all pieces on board
