@@ -180,10 +180,9 @@ def runGame():
                                     # select checker at point
                                     selected = board[point]
                                     moves = selected.calculateMoves(board)
-                                    # unpack all the children of each move and add them to list of highlighted moves
-                                    unpackedMoves = unpackMoves(moves)
-                                    for m in unpackedMoves:
-                                        highlightMoves.append(m)
+                                    # moves is unpacked by default so this is inclusive
+                                    # of all move options.
+                                    highlightMoves += moves
 
                                 # unselect selected checker
                                 else:
@@ -404,24 +403,6 @@ def getPointAtMouse():
     xIndex = math.floor(x / CELLSIZE)
     yIndex = math.floor(y / CELLSIZE)
     return Point(xIndex, yIndex)
-
-
-# Gets all the children of each move in moves
-# moves: list of Move objects
-# returns list of all child and parent Move objects from moves
-def unpackMoves(moves):
-    allMoves = []
-    for m in moves:
-        parent = m
-        allMoves.append(m)
-        maxChildren = 2  # max number of children a move can have is 2 (triple jump)
-        # find all children
-        for i in range(0, maxChildren):
-            if parent.child is None:
-                break
-            allMoves.append(parent.child)
-            parent = parent.child
-    return allMoves
 
 # Takes an array of Moves and highlights the square at each point
 def drawHighlightPoints(moves):

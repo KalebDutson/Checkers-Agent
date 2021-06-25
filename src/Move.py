@@ -1,6 +1,8 @@
 from Utils import *
 
-# Represents a single move that a piece has reported it can make.
+# Represents a single move that a piece has reported it can make,
+# and an optional child move if a second or third jump can be made after
+# it.
 class Move:
 
     # Constructs a new Move.
@@ -21,6 +23,35 @@ class Move:
             # Only jumps can have a child move
             assert self.parent.jump
             self.parent.child = self
+
+    # Gets a list containing this move and all its descendents
+    def unpack(self):
+        allMoves = [self]                    
+        # If this move has a child then recurse to add it to the list.
+        if self.child is not None:
+            allMoves += self.child.unpack()
+        
+        return allMoves
+    
+    # Returns the final destination Point of this move and any descendants
+    def finalDst(self):
+        if self.child is None:
+            return self.dst
+        else:
+            return self.child.finalDst()
+        
+    # Returns a list of the pieces that this move and its descendents jump.
+    def victims(self, board):
+        victs = []
+        if self.jump:
+            victim = board[self.src + (self.dst - self.src) / 2]
+            victs.append(victim)
+            if self.child is not None:                
+                victs += self.child.victims(board)
+            return victs
+        else:
+            # Non-jump moves have no victims
+            return []
 
     def score(self):
         # This is where a move's utility value is calculated.

@@ -27,6 +27,16 @@ class Checker:
 
         return [c for c in diagCoords if c.x >= 0 and c.y >= 0 and c.x < 8 and c.y < 8]
 
+    # Returns a negative number indicating the riskiness a move poses to this piece.
+    def calculateRisk(self, move, board):
+        # Where this piece would end up if took the move and all its children.
+        dst = move.finalDst()
+        # A list of victims that the move would take, which would
+        # then be free as destinations for enemy jumps.
+        victimPositions = [c.position for c in move.victims(board)]
+
+        return 0
+
     # returns:
     #   moves: list of single moves the checker can take
     def calculateMoves(self, board):
@@ -40,7 +50,10 @@ class Checker:
 
         moves += jumps
 
-        moves.sort(reverse=True)
+        # Unpack all the moves.
+        moves = [val for sublist in [m.unpack() for m in moves] for val in sublist]
+
+        moves.sort(reverse=True, key=lambda m: m.score() - self.calculateRisk(m, board))
 
         return moves
 

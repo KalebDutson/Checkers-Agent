@@ -21,7 +21,7 @@ class Board:
         if not isinstance(indices, tuple):
             indices = tuple([indices])
 
-        if len(indices) == 1:
+        if len(indices) == 1:            
             if (isinstance(indices[0], Point)):
                 return self[indices[0].x, indices[0].y]
             else: # Assume it's an integer
@@ -64,6 +64,16 @@ class Board:
         else:
             # Everything off the board is occupied: pieces cannot move there
             return True
+
+    def getDiagonals(self, point):
+        diagCoords = [
+            Point(point.x - 1, point.y - 1),
+            Point(point.x - 1, point.y + 1),
+            Point(point.x + 1, point.y - 1),
+            Point(point.x + 1, point.y + 1)
+        ]
+
+        return [c for c in diagCoords if self.onBoard(c)]
 
     # Returns whether the given coordinate is on the board.
     # Accepts a Point or an x value and a y value and returns a boolean.
@@ -110,10 +120,10 @@ class Board:
         ]
 
     def __str__(self):
-        r = ""
+        r = str(list(range(1, 9))) + "\n"
         for x in range(0, 8):
             column = []
             for y in range(0, 8):
                 column.append(str(self.squares[x][y]) if self.squares[x][y] else '')            
-            r += str(column) + ("\n" if x < 7 else "")
+            r += "ABCDEFGH"[x] + str(column) + ("\n" if x < 7 else "")
         return r
