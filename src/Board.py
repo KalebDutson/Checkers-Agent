@@ -65,6 +65,15 @@ class Board:
             # Everything off the board is occupied: pieces cannot move there
             return True
 
+    def getCheckers(self, red = None):
+        all = []
+        for y in range(0, 8):
+            for x in range(0, 8):
+                piece = self[x,y]
+                if not piece is None and (True if red is None else piece.red == red):
+                    all.append(piece)
+        return all
+
     def getDiagonals(self, point):
         diagCoords = [
             Point(point.x - 1, point.y - 1),
