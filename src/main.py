@@ -218,7 +218,7 @@ def runGame():
 
         # Allow agent to play on White player's turn
         if turn == 'w' and not TEST_MODE:
-            assert agentPlayer.canMove() and not agentPlayer.defeated()
+            assert not agentPlayer.defeated()
             # wait before executing agent's turn
             pygame.time.delay(turnDelay)
             agentPlayer.executeBestMove()
@@ -240,21 +240,24 @@ def runGame():
 
         # Determine if game is over
         # return game state upon game end
-        if gameOverMsg(humanPlayer, agentPlayer) is not None and not TEST_MODE:
-            return gameOverMsg(humanPlayer, agentPlayer)
+        gom = gameOverMsg(humanPlayer, agentPlayer, turn)
+        if gom is not None and not TEST_MODE:
+            return gom
 
 # Return a message for who won
 # Returns None if a tie or win is not found
 # Assumes that the human player is RED and the agent player is WHITE
-def gameOverMsg(human, agent):
+# turn is required to avoid giving a game over message before a final
+# move has been played.
+def gameOverMsg(human, agent, turn):
     msg = None
     if human.defeated() and agent.defeated():
         msg = 'Illegal'
-    elif human.defeated():
+    elif turn == 'r' and human.defeated():
         msg = 'White Wins'
-    elif agent.defeated():
+    elif turn == 'w' and agent.defeated():
         msg = 'Red Wins'
-    elif not human.canMove() or not agent.canMove():
+    elif not human.canMove() and not agent.canMove():
         msg = 'Draw'
     return msg
 
