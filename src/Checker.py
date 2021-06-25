@@ -64,7 +64,6 @@ class Checker:
             return parentMove
 
         if board.occupied(oneAhead) and board[oneAhead].red != self.red and not board.occupied(twoAhead):
-            print("Can jump from %s to %s" % (jumpStart, twoAhead))
             king = not self.kinged and twoAhead.y == 0 if self.red else twoAhead.y == 7
             # Construct the jump, setting it to the child of parentMove
             nextJump = Move(jumpStart, twoAhead, True, king, board[oneAhead].kinged, parentMove)
