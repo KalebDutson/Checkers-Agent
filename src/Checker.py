@@ -1,6 +1,7 @@
 from pygame.event import post
 from Utils import *
 from Move import *
+import random
 
 class Checker:
 
@@ -13,29 +14,11 @@ class Checker:
     def __init__(self, x, y, red):        
         self.red = red
         self.kinged = False
-        self.position = Point(x,y)
+        self.position = Point(x, y)
 
-    # Returns a list of all the board positions that are diagonal of this pieces.
-    # These form its adjacency space.
+    # Returns a list of all the board positions that are diagonal of this piece.
     def getDiagonals(self, board):
-        diagCoords = [
-            Point(self.position.x - 1, self.position.y - 1),
-            Point(self.position.x - 1, self.position.y + 1),
-            Point(self.position.x + 1, self.position.y - 1),
-            Point(self.position.x + 1, self.position.y + 1)
-        ]
-
-        return [c for c in diagCoords if c.x >= 0 and c.y >= 0 and c.x < 8 and c.y < 8]
-
-    # Returns a negative number indicating the riskiness a move poses to this piece.
-    def calculateRisk(self, move, board):
-        # Where this piece would end up if took the move and all its children.
-        dst = move.finalDst()
-        # A list of victims that the move would take, which would
-        # then be free as destinations for enemy jumps.
-        victimPositions = [c.position for c in move.victims(board)]
-
-        return 0
+        return board.getDiagonals(self.position)
 
     # returns:
     #   moves: list of single moves the checker can take
@@ -43,19 +26,45 @@ class Checker:
         diags = self.getDiagonals(board)
 
         # Empty squares this piece could move to
-        moves = [Move(self.position, m, False, not self.kinged and m.y == 0 if self.red else m.y == 7, False) for m in diags
-                if not board.occupied(m) and (self.kinged or (m.y - self.position.y < 0) == self.red)]
+        moves = [Move(board, self.position, d, False, not self.kinged and (d.y == 0 if self.red else d.y == 7), False)
+                for d in diags
+                if not board.occupied(d) and (self.kinged or (d.y - self.position.y < 0) == self.red)]
 
         jumps = self.calculateJumps(board, diags)
 
         moves += jumps
 
-        # Unpack all the moves.
+        # Unpack all the moves into a flat list.
         moves = [val for sublist in [m.unpack() for m in moves] for val in sublist]
 
-        moves.sort(reverse=True, key=lambda m: m.score() - self.calculateRisk(m, board))
+        moves.sort(reverse=True)
 
         return moves
+
+    # Calculates the best move this piece could make out of all of its moves and returns it.
+    # Returns None if this piece cannot move.
+    def bestMove(self, board):
+        # Get a list of possible moves, sorted by score in descending order
+        moves = self.calculateMoves(board)        
+        if len(moves) > 0:
+            # If a checker has 2 or more moves with the same score,
+            # randomly choose a move to be the relative best for this checker
+            bestScore = moves[0].score()
+            if len(moves) > 1:
+                tieCount = len(list(filter(lambda m: m.score() == bestScore, moves)))
+                if tieCount > 1:
+                    print("%s could do %s tied moves" % (self, tieCount))
+                    # Choose one of the tying moves
+                    choiceIndex = random.randint(0, tieCount - 1)
+                    return moves[choiceIndex]
+                else:
+                    return moves[0]
+            else:
+                # Return the first move because it's the best
+                return moves[0]
+        else:
+            # This piece can't move.
+            return None
 
     # Recursively calculates jumps that can be performed following an initial jump.
     # Contrary to the rules Michael learned in 1st grade, multi-jumps can only
@@ -79,7 +88,7 @@ class Checker:
         if board.occupied(oneAhead) and board[oneAhead].red != self.red and not board.occupied(twoAhead):
             king = not self.kinged and twoAhead.y == 0 if self.red else twoAhead.y == 7
             # Construct the jump, setting it to the child of parentMove
-            nextJump = Move(jumpStart, twoAhead, True, king, board[oneAhead].kinged, parentMove)
+            nextJump = Move(board, jumpStart, twoAhead, True, king, board[oneAhead].kinged, parentMove)
             # Recurse to chain on jumps possible from this next jump
             self.calculateChainJumps(board, nextJump)
 
@@ -93,7 +102,7 @@ class Checker:
         return parentMove
 
     # board: current board state
-    # diags: array of diagonals the piece can possible move to
+    # diags: array of diagonals the piece can possibly move to
     # returns:
     #   jumps: array of moves that involve a jump, with subsequent jumps in their child heirarchy as applicable.
     def calculateJumps(self, board, diags):
@@ -112,7 +121,7 @@ class Checker:
             if jumpable and canMove and not board.occupied(twoAhead):
                 # Whether the jump would result in this piece being newly kinged.
                 king = not self.kinged and twoAhead.y == 0 if self.red else twoAhead.y == 7
-                jumps.append(Move(self.position, twoAhead, True, king, board[neighbor].kinged))
+                jumps.append(Move(board, self.position, twoAhead, True, king, board[neighbor].kinged))
 
         # calculate possible squares in a straight line that can be multi-jumped to
         for j in jumps:
@@ -127,14 +136,13 @@ class Checker:
     def move(self, move, board):
         # find root parent, execute all Moves down to 'move'
         root = self.__getMoveRoot(move)
-        self.__moveThroughTree(board, root, root, move)
+        self.__moveThroughTree(board, root, move)
 
     # Recursively execute all moves in Move tree from root Move to final Move
     # board: Board object
     # current: current Move being executed
-    # root: root Move
     # final: final Move to be executed
-    def __moveThroughTree(self, board, current, root, final):
+    def __moveThroughTree(self, board, current, final):
         # remove jumped checker if applicable
         if current.jump:
             direction = (current.dst - current.src) / 2
@@ -148,10 +156,10 @@ class Checker:
         self.position = current.dst
         board[self.position] = self
 
-        if current != final:
+        if not current is final:
             # if current move is not final, it must have a child
             assert current.child is not None
-            self.__moveThroughTree(board, current.child, root, final)
+            self.__moveThroughTree(board, current.child, final)
 
     # recursively searches for the root of a Move
     # returns the root Move
@@ -183,4 +191,4 @@ class Checker:
             return True
 
     def __str__(self):
-        return "%s%s" % ('r' if self.red else 'w', 'k' if self.kinged else '')
+        return "%s%s@%s%s" % ('r' if self.red else 'w', 'k' if self.kinged else '', "ABCDEFGH"[self.position.x], self.position.y + 1)

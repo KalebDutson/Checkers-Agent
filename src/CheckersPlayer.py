@@ -27,10 +27,8 @@ class CheckersPlayer:
     # Determine the best move and move checker
     def executeBestMove(self):
         move, checker = self.calculateBestMove()
-        if move or checker is not None:
-            self.moveChecker(checker, move)
-        else:
-            print("%s has no moves it can make!!" % str(self))
+        assert move is not None and checker is not None        
+        self.moveChecker(checker, move)
 
     def moveChecker(self, checker, move):
         checker.move(move, self.board)
@@ -58,22 +56,21 @@ class CheckersPlayer:
         # Checker the best move belongs to
         bestChecker = None
 
-        for checker in checkers:
-            moves = checker.calculateMoves(self.board)
+        # A list of tuples containing a checker and a best move for it.
+        checkersAndMoves = [(checker, checker.bestMove(self.board)) for checker in checkers]
+        random.shuffle(checkersAndMoves)
+
+        print("\n".join(["%s: %s" % (pair[0], ["%s (r=%s)" % (str(m), m.risk()) for m in pair[0].calculateMoves(self.board)]) for pair in checkersAndMoves
+        if not pair[1] is None]))
+
+        for pair in checkersAndMoves:            
             # ignore pieces that have no possible moves
-            if len(moves) < 1:
+            if pair[1] is None:
                 continue
             # Relative best move, the best move this checker can make
             # assumes that checker.calculateMoves returns a sorted list of moves with the best move at index 0
-            relBest = moves[0]
-
-            # If a checker has 2 moves with the same score,
-            # randomly choose a move to be the relative best for this checker
-            if len(moves) > 1:
-                if moves[0] == moves[1]:
-                    choice = random.randint(0,1)
-                    if choice == 1:
-                        relBest = moves[1]
+            checker = pair[0]
+            relBest = pair[1]
 
             if absBest is None:
                 absBest = relBest
@@ -83,14 +80,10 @@ class CheckersPlayer:
                 if absBest < relBest:
                     absBest = relBest
                     bestChecker = checker
-                # Randomly choose best move if both best moves have the same value
-                # Keeps agent unpredictable
-                elif absBest == relBest:
-                    choice = random.randint(0,1)
-                    if choice == 1:
-                        absBest = relBest
-                        bestChecker = checker
+                # Don't randomly replace absBest here- checkersAndMoves is shuffled
+                # so it's already randomized.
 
+        print("%s (r=%s)" % (absBest, absBest.risk()))
         return absBest, bestChecker
 
     def __str__(self):
