@@ -8,6 +8,7 @@ to the terminal.
 * `K`: King / un-king piece at mouse location
 * `P`: Print available moves of the piece at mouse location
 * `B`: Print board to console.
+* `A`: Auto-play: let the AI control both colors very quickly and automatically start new games.
 * `ENTER`: Switch player turn
 * `SPACE`: Execute best move for player of current turn
 * `Left Mouse`: Add a **RED** piece to the board. Left click again to remove.

@@ -32,8 +32,17 @@ RED = pygame.Color('#9c5359')
 WHITE = pygame.Color('#d3bba2')
 
 # when true, allows for adding an removing of checkers with mouse
-TEST_MODE = True
+TEST_MODE = False
+# When true, both players are AI and move as fast as possible.
+# Good for debugging.
+AUTO_PLAY = False
 
+def autoPlay(humanPlayer, agentPlayer, turn):
+    player = humanPlayer if turn == 'r' else agentPlayer
+    opponent = humanPlayer if turn == 'w' else agentPlayer
+    if not player.defeated():
+        player.executeBestMove(opponent)
+    return 'r' if turn == 'w' else 'w'
 
 def main():
     global FPSCLOCK, DISPLAYSURF, BASICFONT, BG_BOARD, RED_PIECE, RED_KING, WHITE_PIECE, WHITE_KING
@@ -51,12 +60,15 @@ def main():
     WHITE_KING = pygame.image.load('../imgs/white_king.png').convert_alpha()
 
     while True:
-        msg = runGame()
-        showGameOverScreen(msg)
-
+        msg, autoPlay = runGame()
+        showGameOverScreen(msg, autoPlay)
 
 def runGame():
     global TEST_MODE
+    global AUTO_PLAY
+    # A number of frames to be skipped before the next auto play turn is taken.
+    # This makes the game visible for humans.
+    autoPlayDelay = 0
 
     board = Board()
 
@@ -127,6 +139,9 @@ def runGame():
                     # switch turn
                     if event.key == K_RETURN:
                         turn = 'r' if turn == 'w' else 'w'
+                    # Toggle auto play
+                    elif event.key == K_a:
+                        AUTO_PLAY = not AUTO_PLAY
                     # reset board
                     elif event.key == K_r:
                         board.reset()
@@ -155,8 +170,7 @@ def runGame():
                                 print([str(m) for m in moves])
                     # execute the best move for player of current turn
                     elif event.key == K_SPACE:
-                        player = humanPlayer if turn == 'r' else agentPlayer
-                        player.executeBestMove()
+                        turn = autoPlay(humanPlayer, agentPlayer, turn)
 
                     elif event.key == K_b:
                         print('Board:')
@@ -216,11 +230,11 @@ def runGame():
                     terminate()
 
         # Allow agent to play on White player's turn
-        if turn == 'w' and not TEST_MODE:
+        if turn == 'w' and not TEST_MODE and not AUTO_PLAY:
             assert not agentPlayer.defeated()
             # wait before executing agent's turn
             pygame.time.delay(turnDelay)
-            agentPlayer.executeBestMove()
+            agentPlayer.executeBestMove(humanPlayer)
             turnOver = True
 
         # switch turn to other player
@@ -230,7 +244,7 @@ def runGame():
 
         DISPLAYSURF.fill(BGCOLOR)
         DISPLAYSURF.blit(BG_BOARD, (0, 0))
-        drawHighlightPoints(highlightMoves)
+        drawHighlightPoints(highlightMoves, selected)
         drawMsgTitle()
         drawStatus(turn, board)
         drawBoardState(board)
@@ -241,7 +255,14 @@ def runGame():
         # return game state upon game end
         gom = gameOverMsg(humanPlayer, agentPlayer, turn)
         if gom is not None and not TEST_MODE:
-            return gom
+            return gom, AUTO_PLAY
+        
+        if AUTO_PLAY:
+            if autoPlayDelay > 0:
+                autoPlayDelay -= 1
+            else:
+                turn = autoPlay(humanPlayer, agentPlayer, turn)            
+                autoPlayDelay = 2
 
 # Return a message for who won
 # Returns None if a tie or win is not found
@@ -252,9 +273,9 @@ def gameOverMsg(human, agent, turn):
     msg = None
     if human.defeated() and agent.defeated():
         msg = 'Illegal'
-    elif turn == 'r' and human.defeated():
+    elif human.defeated():
         msg = 'White Wins'
-    elif turn == 'w' and agent.defeated():
+    elif agent.defeated():
         msg = 'Red Wins'
     elif not human.canMove() and not agent.canMove():
         msg = 'Draw'
@@ -303,7 +324,7 @@ def terminate():
     sys.exit()
 
 
-def showGameOverScreen(msg):
+def showGameOverScreen(msg, autoPlay):
     gameOverFont = pygame.font.Font('freesansbold.ttf', 30)
     gameSurf = gameOverFont.render(msg, True, BRIGHT_RED)
     gameRect = gameSurf.get_rect()
@@ -315,10 +336,14 @@ def showGameOverScreen(msg):
     pygame.time.wait(500)
     checkForKeyPress()  # clear out any key presses in the event queue
 
-    while True:
-        if checkForKeyPress():
-            pygame.event.get()  # clear event queue
-            return
+    if autoPlay:
+        time.sleep(1.5)
+        return
+    else:
+        while True:
+            if checkForKeyPress():
+                pygame.event.get()  # clear event queue
+                return
 
 
 def drawMsgTitle():
@@ -405,13 +430,14 @@ def getPointAtMouse():
     return Point(xIndex, yIndex)
 
 # Takes an array of Moves and highlights the square at each point
-def drawHighlightPoints(moves):
+def drawHighlightPoints(moves, selected):
     if len(moves) < 1:
         return
     # gradient of colors
     colors = [(117, 207, 255), (108, 194, 241), (99, 182, 226), (90, 169, 212), (81, 157, 198), (72, 145, 184),
               (63, 133, 171),(54, 121, 157), (45, 109, 144), (36, 98, 131), (45, 109, 144), (54, 121, 157),
               (63, 133, 171),(72, 145, 184), (81, 157, 198), (90, 169, 212), (99, 182, 226), (108, 194, 241)]
+    darkIndex = 8
     # lower rate increases the speed at which the color changes along the gradient
     rate = 150
     index = (pygame.time.get_ticks() // rate) % len(colors)
@@ -420,6 +446,11 @@ def drawHighlightPoints(moves):
         xCenter = m.dst.x * CELLSIZE + math.floor(CELLSIZE / 2)
         yCenter = m.dst.y * CELLSIZE + math.floor(CELLSIZE / 2)
         pygame.draw.circle(DISPLAYSURF, colors[index], (xCenter, yCenter), radius=25)
+
+    if selected is not None:
+        x = selected.position.x * CELLSIZE
+        y = selected.position.y * CELLSIZE
+        pygame.draw.rect(DISPLAYSURF, colors[darkIndex], (x, y, CELLSIZE, CELLSIZE))
 
 
 if __name__ == '__main__':
