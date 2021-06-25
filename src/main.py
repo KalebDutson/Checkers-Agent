@@ -367,7 +367,7 @@ def drawStatus(turn, board):
         if board.onBoard(point):
             yDist -= yInc  # increment y distance for message
             # display the index of the square at the mouse location
-            surf = font.render('%s%s | Index: (%s, %s)' % (letters[point.x], point.y, point.x, point.y), True, REAL_WHITE)
+            surf = font.render('%s%s | Index: (%s, %s)' % (letters[point.x], point.y + 1, point.x, point.y), True, REAL_WHITE)
             rect = surf.get_rect()
             rect.bottomleft = (WINDOWWIDTH - 170, WINDOWHEIGHT - yDist)
             DISPLAYSURF.blit(surf, rect)
