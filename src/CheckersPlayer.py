@@ -25,9 +25,9 @@ class CheckersPlayer:
         return False
 
     # Determine the best move and move checker
-    def executeBestMove(self):
-        move, checker = self.calculateBestMove()
-        assert move is not None and checker is not None        
+    def executeBestMove(self, opponent):
+        move, checker = self.calculateBestMove(opponent)
+        assert move is not None and checker is not None
         self.moveChecker(checker, move)
 
     def moveChecker(self, checker, move):
@@ -46,9 +46,13 @@ class CheckersPlayer:
         random.shuffle(checkers)
         return checkers
 
+    # Returns a list of all possible moves this player could make
+    def calculateAllMoves(self):
+        return [move for movelist in [piece.calculateMoves(self.board) for piece in self.getCheckers()] for move in movelist]
+
     # Calculates the best possible move from all pieces on board
     # returns tuple (absBest, bestChecker)
-    def calculateBestMove(self):
+    def calculateBestMove(self, opponent):
         checkers = self.getCheckers()
 
         # Absolute best move possible
@@ -56,14 +60,16 @@ class CheckersPlayer:
         # Checker the best move belongs to
         bestChecker = None
 
+        opponentMoves = opponent.calculateAllMoves()
+
         # A list of tuples containing a checker and a best move for it.
-        checkersAndMoves = [(checker, checker.bestMove(self.board)) for checker in checkers]
+        checkersAndMoves = [(checker, checker.bestMove(self.board, [m for m in opponentMoves if checker in m.victims()] )) for checker in checkers]
         random.shuffle(checkersAndMoves)
 
         print("\n".join(["%s: %s" % (pair[0], ["%s (r=%s)" % (str(m), m.risk()) for m in pair[0].calculateMoves(self.board)]) for pair in checkersAndMoves
         if not pair[1] is None]))
 
-        for pair in checkersAndMoves:            
+        for pair in checkersAndMoves:
             # ignore pieces that have no possible moves
             if pair[1] is None:
                 continue
@@ -83,7 +89,6 @@ class CheckersPlayer:
                 # Don't randomly replace absBest here- checkersAndMoves is shuffled
                 # so it's already randomized.
 
-        print("%s (r=%s)" % (absBest, absBest.risk()))
         return absBest, bestChecker
 
     def __str__(self):
