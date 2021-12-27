@@ -1,4 +1,5 @@
 # Checkers Agent
+This project is the game of Checkers written entirely using Python 3's Pygame library. The game includes a deterministic agent to play against.
 
 ## Installing Dependencies
 
