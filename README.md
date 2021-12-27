@@ -1,3 +1,24 @@
+# Checkers Agent
+
+## Installing Dependencies
+
+Python Version: Python 3.8
+
+The only dependency is PyGame. To install, use the following command:
+```bash
+pip install pygame
+```
+<br>
+
+## Running the game
+Navigate to the main project directory **Checkers-Agent**.
+
+Run the following to launch the game:
+```bash
+python3 src/main.py
+```
+<br>
+
 ## Testing Mode
 Testing mode allows you to control who's turn it is, add / remove pieces to the board, and print a piece's list of moves
 to the terminal.
