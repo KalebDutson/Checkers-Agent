@@ -53,11 +53,11 @@ def main():
     BASICFONT = pygame.font.Font('freesansbold.ttf', 18)
     pygame.display.set_caption('Checkers')
 
-    BG_BOARD = pygame.image.load('../imgs/720x720_board.png')
-    RED_PIECE = pygame.image.load('../imgs/red_piece.png').convert_alpha()
-    RED_KING = pygame.image.load('../imgs/red_king.png').convert_alpha()
-    WHITE_PIECE = pygame.image.load('../imgs/white_piece.png').convert_alpha()
-    WHITE_KING = pygame.image.load('../imgs/white_king.png').convert_alpha()
+    BG_BOARD = pygame.image.load('imgs/720x720_board.png')
+    RED_PIECE = pygame.image.load('imgs/red_piece.png').convert_alpha()
+    RED_KING = pygame.image.load('imgs/red_king.png').convert_alpha()
+    WHITE_PIECE = pygame.image.load('imgs/white_piece.png').convert_alpha()
+    WHITE_KING = pygame.image.load('imgs/white_king.png').convert_alpha()
 
     while True:
         msg, autoPlay = runGame()
